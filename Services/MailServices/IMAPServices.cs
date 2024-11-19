@@ -36,10 +36,7 @@ public enum AutenticationTypeEnum
 }
 public class IMAPServices
 {
-    const int port = 993;
-    private string? tenant_id = "8097a003-1162-40cb-ba74-f198eda4d6e9";
-    private string? client_id = "b3161d3c-f437-47b7-aa3b-6a0ed3532f5b";
-    private string? client_secret = "RrH8Q~O6hHqDetZWbNOYLQrdRgn.WupFPlSpBatO";
+    const int port = 993;   
     private string? mail = "wilbermatusgonzalez@wexpdev.onmicrosoft.com";
     private string? password = "outlook.office365.com";
     private string? host = "outlook.office365.com";
