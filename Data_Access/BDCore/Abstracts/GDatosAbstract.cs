@@ -307,6 +307,20 @@ namespace CAPA_DATOS
 				return ObjDS.Tables[0].Copy();
 			});
 		}
+		/**
+		* Ejecuta una consulta SQL y devuelve los resultados en un DataTable.
+		* @param Command Comando SQL a ejecutar.
+		* @return DataTable con los resultados de la consulta.
+		*/
+		public DataTable TraerDatosSQL(string queryString)
+		{
+			return (DataTable)ExecuteWithRetry(() =>
+			{
+				DataSet ObjDS = new DataSet();
+				CrearDataAdapterSql(ComandoSql(queryString, CrearConexion(ConexionString ?? ""))).Fill(ObjDS);
+				return ObjDS.Tables[0].Copy();
+			});
+		}
 		#endregion
 	}
 
