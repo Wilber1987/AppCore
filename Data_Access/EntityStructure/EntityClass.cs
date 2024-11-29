@@ -30,14 +30,14 @@ public abstract class EntityClass : TransactionalClass
 	// Método para obtener una lista de entidades que cumplen cierta condición
 	public List<T> Get<T>(string condition = "")
 	{
-        using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-        conn.Open();
-        this.SetSqlConnection(conn);
-        // Llama al método TakeList de MDataMapper para obtener datos
-        var Data = MDataMapper?.TakeList<T>(this, condition);
-        // Retorna los datos obtenidos o una lista vacía si es nulo
-        return Data.ToList() ?? new List<T>();
-    }
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		this.SetSqlConnection(conn);
+		// Llama al método TakeList de MDataMapper para obtener datos
+		var Data = MDataMapper?.TakeList<T>(this, condition);
+		// Retorna los datos obtenidos o una lista vacía si es nulo
+		return Data.ToList() ?? new List<T>();
+	}
 
 
 	// Método para filtrar una lista de entidades según una o más condiciones
@@ -69,16 +69,22 @@ public abstract class EntityClass : TransactionalClass
 	// Método para encontrar una entidad que cumpla ciertas condiciones
 	public T? Find<T>(params FilterData[]? where_condition)
 	{
-        using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-        conn.Open();
-        this.SetSqlConnection(conn);
-        // Establece los filtros de datos de la entidad
-        filterData = where_condition?.ToList();
-        // Intenta obtener la entidad utilizando los filtros establecidos
-        var Data = SqlADOConexion.SQLM != null ? SqlADOConexion.SQLM.TakeObject<T>(this) : default(T);
-        // Retorna la entidad encontrada o null si no se encuentra
-        return Data;
-    }
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		this.SetSqlConnection(conn);
+		// Establece los filtros de datos de la entidad
+		if (filterData!.Count == 0)
+		{			
+			filterData = where_condition?.ToList();
+		}else 
+		{
+			filterData.AddRange(where_condition?.ToList() ?? []);
+		}		
+		// Intenta obtener la entidad utilizando los filtros establecidos
+		var Data = SqlADOConexion.SQLM != null ? SqlADOConexion.SQLM.TakeObject<T>(this) : default(T);
+		// Retorna la entidad encontrada o null si no se encuentra
+		return Data;
+	}
 	// Método para encontrar una entidad que cumpla ciertas condiciones
 	public T? SimpleFind<T>(params FilterData[]? where_condition)
 	{
@@ -152,88 +158,88 @@ public abstract class EntityClass : TransactionalClass
 	// Método para guardar una entidad en la base de datos
 	public object? Save()
 	{
-        using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-        conn.Open();
-        var transaction = conn.BeginTransaction();
-        SetSqlConnection(conn);
-        SetTransaction(transaction);
-        try
-        {
-            var result = MDataMapper?.InsertObject(this);
-            transaction?.Commit();
-            return result;
-        }
-        catch (System.Exception e)
-        {
-            transaction?.Rollback();
-            LoggerServices.AddMessageError("ERROR: Save entity", e);
-            throw;
-        }
-    }
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		var transaction = conn.BeginTransaction();
+		SetSqlConnection(conn);
+		SetTransaction(transaction);
+		try
+		{
+			var result = MDataMapper?.InsertObject(this);
+			transaction?.Commit();
+			return result;
+		}
+		catch (System.Exception e)
+		{
+			transaction?.Rollback();
+			LoggerServices.AddMessageError("ERROR: Save entity", e);
+			throw;
+		}
+	}
 
 	// Método para actualizar una entidad en la base de datos
 	public ResponseService Update()
 	{
-        using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-        conn.Open();
-        var transaction = conn.BeginTransaction();
-        this.SetSqlConnection(conn);
-        this.SetTransaction(transaction);
-        try
-        {
-            // Obtiene todas las propiedades de la entidad
-            PropertyInfo[] lst = this.GetType().GetProperties();
-            // Filtra las propiedades que son claves primarias y tienen valores no nulos
-            var pkPropiertys = lst.Where(p => (PrimaryKey?)Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).ToList();
-            var values = pkPropiertys.Where(p => p.GetValue(this) != null).ToList();
-            // Si el número de propiedades de clave primaria coincide con las que tienen valores, realiza la actualización
-            if (pkPropiertys.Count == values.Count)
-            {
-                // Llama al método Update sobrecarg ado con los nombres de las propiedades de clave primaria
-                this.Update(pkPropiertys.Select(p => p.Name).ToArray());
-                transaction?.Commit();
-                // Retorna un mensaje de éxito						
-                return new ResponseService() { status = 200, message = this.GetType().Name + " actualizado correctamente" };
-            }
-            // Si no se encuentran todas las propiedades de clave primaria con valores, retorna un mensaje de error
-            else
-                return new ResponseService() { status = 500, message = "Error al actualizar: no se encuentra el registro " + this.GetType().Name };
-        }
-        catch (Exception e)
-        {
-            transaction?.Rollback();
-            // Registra cualquier error que ocurra durante la actualización
-            LoggerServices.AddMessageError("ERROR: Update entity", e);
-            return new ResponseService()
-            {
-                status = 500,
-                message = "Error al actualizar: " + e.Message
-            };
-        }
-    }
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		var transaction = conn.BeginTransaction();
+		this.SetSqlConnection(conn);
+		this.SetTransaction(transaction);
+		try
+		{
+			// Obtiene todas las propiedades de la entidad
+			PropertyInfo[] lst = this.GetType().GetProperties();
+			// Filtra las propiedades que son claves primarias y tienen valores no nulos
+			var pkPropiertys = lst.Where(p => (PrimaryKey?)Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).ToList();
+			var values = pkPropiertys.Where(p => p.GetValue(this) != null).ToList();
+			// Si el número de propiedades de clave primaria coincide con las que tienen valores, realiza la actualización
+			if (pkPropiertys.Count == values.Count)
+			{
+				// Llama al método Update sobrecarg ado con los nombres de las propiedades de clave primaria
+				this.Update(pkPropiertys.Select(p => p.Name).ToArray());
+				transaction?.Commit();
+				// Retorna un mensaje de éxito						
+				return new ResponseService() { status = 200, message = this.GetType().Name + " actualizado correctamente" };
+			}
+			// Si no se encuentran todas las propiedades de clave primaria con valores, retorna un mensaje de error
+			else
+				return new ResponseService() { status = 500, message = "Error al actualizar: no se encuentra el registro " + this.GetType().Name };
+		}
+		catch (Exception e)
+		{
+			transaction?.Rollback();
+			// Registra cualquier error que ocurra durante la actualización
+			LoggerServices.AddMessageError("ERROR: Update entity", e);
+			return new ResponseService()
+			{
+				status = 500,
+				message = "Error al actualizar: " + e.Message
+			};
+		}
+	}
 	// Método para actualizar una entidad en la base de datos utilizando el identificador proporcionado
 	public bool Update(string Id)
 	{
-        using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-        conn.Open();
-        var transaction = conn.BeginTransaction();
-        this.SetSqlConnection(conn);
-        this.SetTransaction(transaction);
-        try
-        {
-            // Actualiza la entidad en la base de datos utilizando el identificador proporcionado
-            MDataMapper?.UpdateObject(this, Id);
-            // Retorna verdadero para indicar que la operación fue exitosa
-            return true;
-        }
-        catch (Exception e)
-        {
-            transaction?.Rollback();
-            // Registra cualquier error que ocurra durante la actualización
-            LoggerServices.AddMessageError("ERROR: Update entity", e);
-            return false;
-        }
-    }
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		var transaction = conn.BeginTransaction();
+		this.SetSqlConnection(conn);
+		this.SetTransaction(transaction);
+		try
+		{
+			// Actualiza la entidad en la base de datos utilizando el identificador proporcionado
+			MDataMapper?.UpdateObject(this, Id);
+			// Retorna verdadero para indicar que la operación fue exitosa
+			return true;
+		}
+		catch (Exception e)
+		{
+			transaction?.Rollback();
+			// Registra cualquier error que ocurra durante la actualización
+			LoggerServices.AddMessageError("ERROR: Update entity", e);
+			return false;
+		}
+	}
 
 	// Método para actualizar una entidad en la base de datos utilizando un arreglo de identificadores proporcionado
 	public bool Update(string[] Id)
@@ -261,27 +267,27 @@ public abstract class EntityClass : TransactionalClass
 	// Método para eliminar una entidad de la base de datos
 	public bool Delete()
 	{
-        using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-        conn.Open();
-        var transaction = conn.BeginTransaction();
-        this.SetSqlConnection(conn);
-        this.SetTransaction(transaction);
-        try
-        {
-            // Elimina la entidad de la base de datos
-            MDataMapper?.Delete(this);
-            // Confirma la transacción
-            transaction.Commit();
-            // Retorna verdadero para indicar que la operación fue exitosa
-            return true;
-        }
-        catch (Exception e)
-        {
-            transaction.Rollback();
-            LoggerServices.AddMessageError("ERROR: Update entity Delete", e);
-            throw;
-        }
-    }
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		var transaction = conn.BeginTransaction();
+		this.SetSqlConnection(conn);
+		this.SetTransaction(transaction);
+		try
+		{
+			// Elimina la entidad de la base de datos
+			MDataMapper?.Delete(this);
+			// Confirma la transacción
+			transaction.Commit();
+			// Retorna verdadero para indicar que la operación fue exitosa
+			return true;
+		}
+		catch (Exception e)
+		{
+			transaction.Rollback();
+			LoggerServices.AddMessageError("ERROR: Update entity Delete", e);
+			throw;
+		}
+	}
 
 	public int Count(params FilterData[] where_condition)
 	{
@@ -297,14 +303,14 @@ public abstract class EntityClass : TransactionalClass
 			filterData = new List<FilterData>();
 
 		filterData.AddRange(where_condition.ToList());
-        using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-        conn.Open();
-        this.SetSqlConnection(conn);
-        // Se obtienen los datos utilizando el filtro actualizado
-        var Count = MDataMapper?.Count(this);
-        // Retorna los datos obtenidos o una lista vacía si es nulo
-        return Count ?? 0;
-    }
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		this.SetSqlConnection(conn);
+		// Se obtienen los datos utilizando el filtro actualizado
+		var Count = MDataMapper?.Count(this);
+		// Retorna los datos obtenidos o una lista vacía si es nulo
+		return Count ?? 0;
+	}
 
 	private static bool IsValidFilter(FilterData[] where_condition)
 	{
