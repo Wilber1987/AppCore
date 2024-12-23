@@ -74,7 +74,7 @@ namespace API.Controllers
 			return true;
 
 		}
-		public static UserModel User(string seassonKey)
+		public static UserModel User(string? seassonKey)
 		{
 			var security_User = SeasonServices
 				.Get<Security_Users>("loginIn", seassonKey);
