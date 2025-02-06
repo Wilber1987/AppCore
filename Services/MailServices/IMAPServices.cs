@@ -23,6 +23,7 @@ public class MailConfig
 	public string? CLIENT { get; set; }
 	public string? OBJECTID { get; set; }
 	public string? CLIENT_SECRET { get; set; }
+    public int? PORT { get; set; }
 }
 
 public enum HostServices

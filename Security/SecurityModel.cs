@@ -170,7 +170,7 @@ namespace CAPA_DATOS.Security
 			 p.Security_Permissions.Descripcion.Equals(Permissions.ADMIN_ACCESS.ToString())
 			) != null) != null;
 		}
-		internal object RecoveryPassword()
+		internal object RecoveryPassword(MailConfig? config)
 		{
 			Security_Users? user = this.Find<Security_Users>();
 			if (user != null && user.Estado == "ACTIVO")
@@ -181,7 +181,7 @@ namespace CAPA_DATOS.Security
 				_ = SMTPMailServices.SendMail("support@password.recovery",
 				 [user.Mail],
 				 "Recuperación de contraseña",
-				 $"nueva contraseña: {password}", null, null, null);
+				 $"nueva contraseña: {password}", null, null, config);
 				return user;
 			}
 			if (user?.Estado == "INACTIVO")

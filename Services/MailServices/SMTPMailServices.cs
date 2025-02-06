@@ -207,7 +207,7 @@ namespace CAPA_DATOS.Services
 				{
 					UseDefaultCredentials = false,
 					Host = config.HOST ?? "",
-					Port = PORT, //Puerto de salida 
+					Port = config.PORT ?? PORT, //Puerto de salida 
 					Credentials = new NetworkCredential(config.USERNAME, config.PASSWORD)//Cuenta de correo
 				};
 				ServicePointManager.ServerCertificateValidationCallback +=
