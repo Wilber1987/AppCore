@@ -143,8 +143,9 @@ namespace CAPA_DATOS
 				}
 				return true;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
+				LoggerServices.AddMessageError("error conectando a bd", ex);
 				throw;
 			}
 		}

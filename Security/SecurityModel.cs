@@ -67,16 +67,16 @@ namespace CAPA_DATOS.Security
 		public DateTime? Token_Date { get; set; }
 		public DateTime? Token_Expiration_Date { get; set; }
 		public DateTime? Password_Expiration_Date { get; set; }
-		
+
 		[OneToMany(TableName = "Security_Users_Roles", KeyColumn = "Id_User", ForeignKeyColumn = "Id_User")]
 		public List<Security_Users_Roles>? Security_Users_Roles { get; set; }
 
-		[OneToMany(TableName = "Tbl_Profile",  KeyColumn = "Id_User", ForeignKeyColumn = "IdUser")]
+		[OneToMany(TableName = "Tbl_Profile", KeyColumn = "Id_User", ForeignKeyColumn = "IdUser")]
 		public List<Tbl_Profile>? Tbl_Profiles { get; set; }
 
 		public Tbl_Profile? Get_Profile()
-		{		
-			return  new Tbl_Profile { IdUser = Id_User }.Find<Tbl_Profile>();
+		{
+			return new Tbl_Profile { IdUser = Id_User }.Find<Tbl_Profile>();
 		}
 		public Security_Users? GetUserData()
 		{
@@ -104,7 +104,7 @@ namespace CAPA_DATOS.Security
 			if (!AuthNetCore.HavePermission(Permissions.ADMINISTRAR_USUARIOS.ToString(), identity))
 			{
 				throw new Exception("no tiene permisos");
-			}			
+			}
 			return Save_User();
 		}
 
@@ -226,6 +226,32 @@ namespace CAPA_DATOS.Security
 		public string? Descripcion { get; set; }
 		public string? Detalles { get; set; }
 		public string? Estado { get; set; }
+
+		public static void PrepareDefaultPermissions()
+		{
+			var permissionsList = Enum.GetValues(typeof(Permissions));
+			foreach (Permissions permisionDescription in permissionsList)
+			{
+				try
+				{
+					var PermissionsFind = new Security_Permissions { Descripcion = permisionDescription.ToString() }.Find<Security_Permissions>();
+					if (PermissionsFind == null)
+					{
+						new Security_Permissions
+						{
+							Descripcion = permisionDescription.ToString(),
+							Detalles = permisionDescription.ToString(),
+							Estado = "ACTIVO"
+						}.Save();
+					}
+				}
+				catch (System.Exception)
+				{
+
+					throw;
+				}
+			}
+		}
 	}
 	public class Security_Permissions_Roles : EntityClass
 	{

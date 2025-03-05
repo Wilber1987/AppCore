@@ -69,9 +69,8 @@ namespace CAPA_DATOS
 				var logEntry = new Log
 				{
 					Fecha = DateTime.Now,
-					body = RemoveSpecialCharactersForSql(
-						$"Tipo: {ex.GetType().Name},\n\n Mensaje: {ex.Message},\n\n Pila de llamadas:\n\n {ex.StackTrace}"),
-					message = RemoveSpecialCharactersForSql(message),
+					body = 	$"Tipo: {ex.GetType().Name},\n\n Mensaje: {ex.Message},\n\n Pila de llamadas:\n\n {ex.StackTrace}",
+					message = message,
 					LogType = LogType.ERROR.ToString()
 				};
 

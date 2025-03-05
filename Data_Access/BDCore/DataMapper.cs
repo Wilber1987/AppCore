@@ -289,7 +289,7 @@ namespace CAPA_DATOS.BDCore.Abstracts
 					// Convierte la colección entrante a una lista para facilitar las operaciones
 					var incomingItems = ((IEnumerable)attributeValue).Cast<object>().ToList();
 					// Recupera los datos existentes en la base de datos usando Find o Get
-					var currentItemsInDatabase = ((IEnumerable)oneToManyProp.GetValue(currentEntityInDatabase)).Cast<object>().ToList();
+					List<object> currentItemsInDatabase = ((IEnumerable?)oneToManyProp.GetValue(currentEntityInDatabase))?.Cast<object>().ToList() ?? [];
 					// Identifica los elementos que deben eliminarse (están en la base de datos pero no en la lista entrante)
 					var itemsToDelete = currentItemsInDatabase
 						.Where(dbItem => !incomingItems.Any(newItem =>

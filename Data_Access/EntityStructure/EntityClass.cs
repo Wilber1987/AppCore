@@ -91,9 +91,9 @@ public abstract class EntityClass : TransactionalClass
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
 			conn.Open();
-			var transaction = conn.BeginTransaction();
+			//var transaction = conn.BeginTransaction();
 			this.SetSqlConnection(conn);
-			this.SetTransaction(transaction);
+			//this.SetTransaction(transaction);
 			// Establece los filtros de datos de la entidad
 			filterData = where_condition?.ToList();
 			// Intenta obtener la entidad utilizando los filtros establecidos
@@ -108,9 +108,9 @@ public abstract class EntityClass : TransactionalClass
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
 			conn.Open();
-			var transaction = conn.BeginTransaction();
+			//var transaction = conn.BeginTransaction();
 			this.SetSqlConnection(conn);
-			this.SetTransaction(transaction);
+			//this.SetTransaction(transaction);
 
 			Type entityType = this.GetType();
 			PropertyInfo[] lst = this.GetType().GetProperties();
@@ -145,9 +145,9 @@ public abstract class EntityClass : TransactionalClass
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
 			conn.Open();
-			var transaction = conn.BeginTransaction();
+			//var transaction = conn.BeginTransaction();
 			this.SetSqlConnection(conn);
-			this.SetTransaction(transaction);
+			//this.SetTransaction(transaction);
 			// Obtiene los datos sin aplicar transacción
 			var Data = MDataMapper?.TakeList<T>(this, "", true);
 			// Retorna los datos obtenidos o una lista vacía si es nulo

@@ -4,10 +4,6 @@ using MimeKit;
 using System;
 using System.IO;
 using System.Text;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
-using iTextSharp.text.html.simpleparser;
-using iTextSharp.tool.xml;
 
 
 namespace CAPA_DATOS.Services
@@ -27,7 +23,7 @@ namespace CAPA_DATOS.Services
 				}
 				string? val = Attach?.Value;
 				Attach!.Value = ExtractBase64(val ?? "");
-				
+
 				if (!IsBase64String(Attach?.Value ?? ""))
 				{
 					return new ResponseService()
@@ -50,7 +46,7 @@ namespace CAPA_DATOS.Services
 				}
 				string FileType = GetFileType(MimeType);
 				Guid Uuid = Guid.NewGuid();
-				string FileName = ( Attach?.Name ?? "" ) + Uuid.ToString() + FileType;
+				string FileName = (Attach?.Name ?? "") + Uuid.ToString() + FileType;
 				string FileRoute = Ruta + FileName;
 				File.WriteAllBytes(FileRoute, File64);
 				string RutaRelativa = Path.GetRelativePath(Directory.GetCurrentDirectory(), FileRoute);
@@ -165,33 +161,17 @@ namespace CAPA_DATOS.Services
 		public static ModelFiles HtmlToPdfBase64(string htmlString, string fileName)
 		{
 			using (MemoryStream memoryStream = new MemoryStream())
-			{
-				// Crear un documento y un escritor de PDF
-			Document document = new Document();
-			PdfWriter writer = PdfWriter.GetInstance(document, memoryStream);
+			{				
+				// Obtener los bytes del PDF
+				byte[] pdfBytes = PdfService.ConvertHtmlToPdf(htmlString);
 
-			// Abrir el documento
-			document.Open();
-
-			// Usar XMLWorkerHelper para procesar el HTML
-			using (StringReader sr = new StringReader(htmlString))
-			{
-				XMLWorkerHelper.GetInstance().ParseXHtml(writer, document, sr);
-			}
-
-			// Cerrar el documento
-			document.Close();
-
-			// Obtener los bytes del PDF
-			byte[] pdfBytes = memoryStream.ToArray();
-
-			// Codificar el PDF en base64
-			string base64EncodedPdf = Convert.ToBase64String(pdfBytes);
+				// Codificar el PDF en base64
+				string base64EncodedPdf = Convert.ToBase64String(pdfBytes);
 
 				// Mostrar la cadena codificada en base64
 				//Console.WriteLine("PDF codificado en base64:");
 				//Console.WriteLine(base64EncodedPdf);
-				
+
 				return new ModelFiles
 				{
 					Value = base64EncodedPdf,
