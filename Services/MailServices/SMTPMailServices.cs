@@ -175,7 +175,7 @@ namespace CAPA_DATOS.Services
 			{
 				//var templatePage = Path.Combine(System.IO.Path.GetFullPath("../UI/Pages/Mails"), path);
 				MailMessage correo = new MailMessage();
-				correo.From = new MailAddress(config.USERNAME, "PORTAL CCA", System.Text.Encoding.UTF8);//Correo de salida
+				correo.From = new MailAddress(config.USERNAME, config.DISPLAYNAME ?? config.USERNAME, System.Text.Encoding.UTF8);//Correo de salida
 				if (toMails == null || toMails.Count == 0)
 				{
 					return false;
@@ -191,6 +191,7 @@ namespace CAPA_DATOS.Services
 					foreach (var files in attach)
 					{
 						Attachment AttachFile = new Attachment(files.Value);
+						AttachFile.Name = files.Name;
 						correo.Attachments.Add(AttachFile);
 					}
 				}

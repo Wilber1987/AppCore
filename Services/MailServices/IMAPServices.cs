@@ -24,11 +24,13 @@ public class MailConfig
 	public string? OBJECTID { get; set; }
 	public string? CLIENT_SECRET { get; set; }
     public int? PORT { get; set; }
+    public string? DISPLAYNAME { get;  set; }
 }
 
 public enum HostServices
 {
-	OUTLOOK, GMAIL
+	OUTLOOK, GMAIL,
+    PRIVATE
 }
 
 public enum AutenticationTypeEnum
