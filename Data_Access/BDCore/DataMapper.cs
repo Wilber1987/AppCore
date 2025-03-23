@@ -563,15 +563,26 @@ namespace CAPA_DATOS.BDCore.Abstracts
 		{
 			return GDatos.EntityDescription?.Where(x => x.TABLE_NAME.ToLower() == entityClass.GetType().Name.ToLower()).ToList() ?? new List<EntityProps>();
 		}
-		/*
+
+        internal void SetPropertyNull(EntityClass entityClass, params string[]  propertys)
+        {
+            string? strQuery = QueryBuilder.BuildUpdateNullsPropertys(entityClass, propertys);
+
+// Si la consulta de actualización no es nula, ejecuta la consulta SQL
+			if (strQuery != null)
+			{
+				GDatos?.ExcuteSqlQuery(strQuery, entityClass.GetSqlConnection(), entityClass.GetTransaction());
+			}
+        }
+        /*
 * Utlizado para la lectura de los datos
 
 protected (DataTable, int)? BuildTablePaginated(EntityClass Inst, ref string CondSQL, int pageNum, int pageSize, string orderBy, string orderDir,
-	bool fullEntity = true, bool isFind = true)
+bool fullEntity = true, bool isFind = true)
 {
-	(string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQueryPaginated(Inst, CondSQL, pageNum, pageSize, orderBy, orderDir, fullEntity, isFind);
-	return GDatos?.BuildTablePaginated(queryString, queryCount, parameters);
+(string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQueryPaginated(Inst, CondSQL, pageNum, pageSize, orderBy, orderDir, fullEntity, isFind);
+return GDatos?.BuildTablePaginated(queryString, queryCount, parameters);
 }*/
-		#endregion
-	}
+        #endregion
+    }
 }

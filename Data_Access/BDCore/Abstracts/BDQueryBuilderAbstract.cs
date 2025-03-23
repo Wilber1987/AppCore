@@ -1,5 +1,7 @@
 using System.Data;
 using System.Reflection;
+using System.Text;
+
 
 namespace CAPA_DATOS.BDCore.Abstracts
 {
@@ -345,7 +347,7 @@ namespace CAPA_DATOS.BDCore.Abstracts
 					PropertyInfo? propJSON = props.ToList().Find(p => p.Name.ToLower().Equals(filter?.ObjectName?.ToLower())); // Obtiene la propiedad correspondiente al nombre proporcionado en el filtro
 					if (propJSON != null)
 					{
-						AtributeName = propJSON.Name;						
+						AtributeName = propJSON.Name;
 						jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(propJSON, typeof(JsonProp));
 						if (filter?.Values?.Count > 0 && jsonPropAttribute != null)
 						{
@@ -354,8 +356,8 @@ namespace CAPA_DATOS.BDCore.Abstracts
 							parameters.Add(parameter1);
 							// Construimos la condición con JSON_VALUE
 							CondicionString += $" JSON_VALUE({AtributeName}, '$.{filter.PropName}') = {paramName} ";
-						} 
-						else 
+						}
+						else
 						{
 							throw new Exception($"el valor no puede ser null y debe existir en la entidad con el atributo JsonProp {filter?.ObjectName}");
 						}
@@ -460,6 +462,44 @@ namespace CAPA_DATOS.BDCore.Abstracts
 			}
 
 			return queryString;
+		}
+
+		internal string? BuildUpdateNullsPropertys(EntityClass entityClass, string[] properties)
+		{
+			if (entityClass == null || properties == null || properties.Length == 0)
+				return null;
+				
+			List<EntityProps> entityProps = entityClass.DescribeEntity(GetSqlType());
+
+			Type entityType = entityClass.GetType();
+			string tableName = entityType.Name; // Se asume que el nombre de la clase es el nombre de la tabla
+
+			// Buscar la propiedad marcada como PrimaryKey
+			PropertyInfo? primaryKeyProperty = entityType.GetProperties()
+				.FirstOrDefault(prop => prop.GetCustomAttribute<PrimaryKey>() != null);
+
+			if (primaryKeyProperty == null)
+				throw new InvalidOperationException("No se encontró una clave primaria en la entidad.");
+
+			string primaryKeyColumn = primaryKeyProperty.Name;
+			object? primaryKeyValue = primaryKeyProperty.GetValue(entityClass);
+
+			if (primaryKeyValue == null)
+				throw new InvalidOperationException("El valor de la clave primaria no puede ser nulo.");
+
+			// Construcción de la consulta SQL
+			StringBuilder sqlQuery = new StringBuilder();
+			sqlQuery.Append($"UPDATE {entityProps[0].TABLE_SCHEMA + "." + tableName} SET ");
+			
+			sqlQuery.Append(string.Join(", ", properties.Select(p =>   $"{p} = NULL")));
+
+			sqlQuery.Append($" WHERE {primaryKeyColumn} = {FormatValue(primaryKeyValue)};");
+
+			return sqlQuery.ToString();
+		}
+		private string FormatValue(object value)
+		{
+			return value is string || value is DateTime ? $"'{value}'" : value.ToString();
 		}
 
 		//DATA SQUEMA

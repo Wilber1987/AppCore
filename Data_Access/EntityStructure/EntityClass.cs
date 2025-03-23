@@ -337,5 +337,44 @@ public abstract class EntityClass : TransactionalClass
 		return entityProps;
 	}
 
-
+	public ResponseService SetPropertyNull(params string[] properties)	
+	{
+		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
+		conn.Open();
+		var transaction = conn.BeginTransaction();
+		this.SetSqlConnection(conn);
+		this.SetTransaction(transaction);
+		try
+		{
+			// Obtiene todas las propiedades de la entidad
+			PropertyInfo[] lst = this.GetType().GetProperties();
+			// Filtra las propiedades que son claves primarias y tienen valores no nulos
+			var pkPropiertys = lst.Where(p => (PrimaryKey?)Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).ToList();
+			var values = pkPropiertys.Where(p => p.GetValue(this) != null).ToList();
+			// Si el número de propiedades de clave primaria coincide con las que tienen valores, realiza la actualización
+			if (pkPropiertys.Count == values.Count)
+			{
+				// Llama al método Update sobrecarg ado con los nombres de las propiedades de clave primaria
+				MDataMapper?.SetPropertyNull(this, properties);
+				transaction?.Commit();
+				// Retorna un mensaje de éxito						
+				return new ResponseService() { status = 200, message = this.GetType().Name + " actualizado correctamente" };
+			}
+			// Si no se encuentran todas las propiedades de clave primaria con valores, retorna un mensaje de error
+			else
+				return new ResponseService() { status = 500, message = "Error al actualizar: no se encuentra el registro " + this.GetType().Name };
+		}
+		catch (Exception e)
+		{
+			transaction?.Rollback();
+			// Registra cualquier error que ocurra durante la actualización
+			LoggerServices.AddMessageError("ERROR: Update entity", e);
+			return new ResponseService()
+			{
+				status = 500,
+				message = "Error al actualizar: " + e.Message
+			};
+		}
+	}
+	
 }
