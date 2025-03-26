@@ -12,7 +12,7 @@ using MailKit.Security;
 using Microsoft.Identity.Client;
 using MimeKit;
 
-namespace CAPA_DATOS.Services
+namespace APPCORE.Services
 {
 	public class SMTPMailServices
 	{

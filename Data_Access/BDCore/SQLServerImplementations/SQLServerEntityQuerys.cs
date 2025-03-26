@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CAPA_DATOS.BDCore.SQLServerImplementations
+namespace APPCORE.BDCore.SQLServerImplementations
 {
 	public class SQLServerEntityQuerys
 	{

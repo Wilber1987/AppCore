@@ -1,4 +1,4 @@
-namespace CAPA_DATOS;
+namespace APPCORE;
 public class SearchData
 {
     public int first { get; set; }

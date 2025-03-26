@@ -5,14 +5,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
-using CAPA_DATOS.BDCore.Abstracts;
+using APPCORE.BDCore.Abstracts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using MySql.Data.MySqlClient;
 using System;
 
-namespace CAPA_DATOS.BDCore.MySqlImplementations
+namespace APPCORE.BDCore.MySqlImplementations
 {
 	public class MySQLQueryBuilder : BDQueryBuilderAbstract
 	{

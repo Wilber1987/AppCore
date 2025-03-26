@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Data;
 using System.Reflection;
-using CAPA_DATOS.BDCore.Abstracts;
+using APPCORE.BDCore.Abstracts;
 
-namespace CAPA_DATOS;
+namespace APPCORE;
 // Clase abstracta base para todas las entidades del sistema
 public abstract class EntityClass : TransactionalClass
 {

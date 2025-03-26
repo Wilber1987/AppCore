@@ -1,4 +1,4 @@
-namespace CAPA_DATOS.Services;
+namespace APPCORE.Services;
 public class Auth2Utils
 {
     public static async Task<AccessTokenModel> GetAccessTokenAsync(MailConfig mailConfig)

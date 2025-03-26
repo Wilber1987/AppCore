@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text;
 
 
-namespace CAPA_DATOS.BDCore.Abstracts
+namespace APPCORE.BDCore.Abstracts
 {
 	public abstract class BDQueryBuilderAbstract
 	{

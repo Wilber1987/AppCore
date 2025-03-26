@@ -1,11 +1,11 @@
 ﻿using System.Data;
 using System.Transactions;
-using CAPA_DATOS.BDCore.Abstracts;
-using CAPA_DATOS.BDCore.MySqlImplementations;
-using CAPA_DATOS.BDCore.PostgresImplementations;
-using CAPA_DATOS.BDCore.SQLServerImplementations;
+using APPCORE.BDCore.Abstracts;
+using APPCORE.BDCore.MySqlImplementations;
+using APPCORE.BDCore.PostgresImplementations;
+using APPCORE.BDCore.SQLServerImplementations;
 
-namespace CAPA_DATOS
+namespace APPCORE
 {
 	public abstract class GDatosAbstract
 	{

@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using MySql.Data.MySqlClient;
 
-namespace CAPA_DATOS.MySqlImplementations
+namespace APPCORE.MySqlImplementations
 {
     public class MySqlGDatos : GDatosAbstract
     {

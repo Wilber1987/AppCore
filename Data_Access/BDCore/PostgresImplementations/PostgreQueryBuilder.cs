@@ -5,13 +5,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
-using CAPA_DATOS.BDCore.Abstracts;
+using APPCORE.BDCore.Abstracts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 
-namespace CAPA_DATOS.PostgresImplementations
+namespace APPCORE.PostgresImplementations
 {
 	public class PostgreQueryBuilder : BDQueryBuilderAbstract
 	{

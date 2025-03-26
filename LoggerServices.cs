@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CAPA_DATOS
+namespace APPCORE
 {
 	public class LoggerServices
 	{

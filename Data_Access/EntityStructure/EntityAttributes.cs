@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace CAPA_DATOS
+namespace APPCORE
 {
     /*
        * @param {KeyColumn} Nombre de la llave primaria de la tabla con cardinalidad uno

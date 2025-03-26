@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
-namespace CAPA_DATOS.Services;
+namespace APPCORE.Services;
 
 public static class NumberUtility
 {

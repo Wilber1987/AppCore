@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using CAPA_DATOS.BDCore;
-using CAPA_DATOS.BDCore.Abstracts;
-using CAPA_DATOS.PostgresImplementations;
+using APPCORE.BDCore;
+using APPCORE.BDCore.Abstracts;
+using APPCORE.PostgresImplementations;
 
-namespace CAPA_DATOS;
+namespace APPCORE;
 
 public class PostgresADOConnection
 {

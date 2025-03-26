@@ -6,11 +6,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
-using CAPA_DATOS.BDCore.Abstracts;
+using APPCORE.BDCore.Abstracts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace CAPA_DATOS.BDCore.Implementations
+namespace APPCORE.BDCore.Implementations
 {
 	public class SQLServerQueryBuilder : BDQueryBuilderAbstract
 	{

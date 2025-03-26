@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 
 
-namespace CAPA_DATOS.Services
+namespace APPCORE.Services
 {
 	public class FileService
 	{

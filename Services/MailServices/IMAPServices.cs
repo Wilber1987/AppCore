@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using CAPA_DATOS;
+using APPCORE;
 using MailKit.Net.Imap;
 using System.Net.Http.Headers;
 using MailKit.Security;
@@ -10,7 +10,7 @@ using MailKit;
 using MimeKit;
 using MailKit.Search;
 
-namespace CAPA_DATOS.Services;
+namespace APPCORE.Services;
 public class MailConfig
 {
 	public string? HOST { get; set; }

@@ -1,8 +1,8 @@
 ﻿using API.Controllers;
-using CAPA_DATOS.Services;
+using APPCORE.Services;
 
 
-namespace CAPA_DATOS.Security
+namespace APPCORE.Security
 {
 	public class Security_Roles : EntityClass
 	{

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CAPA_DATOS;
+using APPCORE;
 
-namespace CAPA_DATOS.Security
+namespace APPCORE.Security
 {
 	public enum RoleEnum
 	{

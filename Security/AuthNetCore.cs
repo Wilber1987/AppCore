@@ -1,6 +1,6 @@
-﻿using CAPA_DATOS;
-using CAPA_DATOS.Services;
-using CAPA_DATOS.Security;
+﻿using APPCORE;
+using APPCORE.Services;
+using APPCORE.Security;
 
 namespace API.Controllers
 {

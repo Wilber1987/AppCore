@@ -10,7 +10,7 @@ using iText.Kernel.Geom;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout.Properties;
 
-namespace CAPA_DATOS.Services
+namespace APPCORE.Services
 {
 	public class PdfService
 	{

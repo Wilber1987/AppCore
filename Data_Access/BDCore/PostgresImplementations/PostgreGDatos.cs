@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using Npgsql;
 
-namespace CAPA_DATOS.PostgresImplementations
+namespace APPCORE.PostgresImplementations
 {
     public class PostgreGDatos : GDatosAbstract
     {

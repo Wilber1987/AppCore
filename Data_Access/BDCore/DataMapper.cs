@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace CAPA_DATOS.BDCore.Abstracts
+namespace APPCORE.BDCore.Abstracts
 {
 	public class WDataMapper
 	{

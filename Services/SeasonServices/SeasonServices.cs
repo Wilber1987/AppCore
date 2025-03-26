@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using Newtonsoft.Json;
 
-namespace CAPA_DATOS.Services
+namespace APPCORE.Services
 {
     public class SeasonServices
     {

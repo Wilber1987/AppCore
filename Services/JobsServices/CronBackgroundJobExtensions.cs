@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CAPA_DATOS.Cron.Jobs
+namespace APPCORE.Cron.Jobs
 {
     public static class CronBackgroundJobExtensions
     {

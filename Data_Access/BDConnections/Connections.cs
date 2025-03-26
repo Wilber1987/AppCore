@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CAPA_DATOS.BDCore.Abstracts;
+using APPCORE.BDCore.Abstracts;
 
-namespace CAPA_DATOS.BDCore
+namespace APPCORE.BDCore
 {
     public class Connections
     {

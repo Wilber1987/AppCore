@@ -1,8 +1,8 @@
 using System.Data;
-using CAPA_DATOS.BDCore;
-using CAPA_DATOS.BDCore.Abstracts;
+using APPCORE.BDCore;
+using APPCORE.BDCore.Abstracts;
 
-namespace CAPA_DATOS;
+namespace APPCORE;
 
 public abstract class TransactionalClass
 {

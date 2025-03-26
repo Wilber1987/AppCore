@@ -1,6 +1,6 @@
 
 
-namespace CAPA_DATOS
+namespace APPCORE
 {
     public class ResponseService
     {

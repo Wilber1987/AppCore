@@ -1,13 +1,13 @@
-﻿using CAPA_DATOS.BDCore.Abstracts;
-using CAPA_DATOS.BDCore.MySqlImplementations;
-using CAPA_DATOS.MySqlImplementations;
+﻿using APPCORE.BDCore.Abstracts;
+using APPCORE.BDCore.MySqlImplementations;
+using APPCORE.MySqlImplementations;
 using MySql.Data.MySqlClient;
 using Renci.SshNet;
 
 
 
 
-namespace CAPA_DATOS;
+namespace APPCORE;
 
 public class MySQLConnection
 {

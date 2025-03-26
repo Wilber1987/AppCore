@@ -1,4 +1,4 @@
-namespace CAPA_DATOS;
+namespace APPCORE;
 
 public abstract class ViewClass : TransactionalClass
 {
