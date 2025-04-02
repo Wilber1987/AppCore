@@ -191,9 +191,9 @@ namespace APPCORE.Security
 			return null;
 		}
 
-		public object? changePassword(string? seassonKey)
+		public object? changePassword(string? sessionKey)
 		{
-			var security_User = AuthNetCore.User(seassonKey).UserData;
+			var security_User = AuthNetCore.User(sessionKey).UserData;
 			Password = EncrypterServices.Encrypt(Password);
 			Id_User = security_User?.Id_User;
 			return Update();

@@ -9,7 +9,7 @@ namespace API.Controllers
 		static public bool AuthAttribute = false;
 		static public bool Authenticate(string idetify)
 		{
-			var security_User = SeasonServices.Get<Security_Users>("loginIn", idetify);
+			var security_User = SessionServices.Get<Security_Users>("loginIn", idetify);
 			if (SqlADOConexion.SQLM == null || security_User == null)
 			{
 				return false;
@@ -36,7 +36,7 @@ namespace API.Controllers
 					Mail = mail,
 					Password = EncrypterServices.Encrypt(password)
 				}.GetUserData();
-				if (security_User == null) ClearSeason();
+				if (security_User == null) ClearSeason(idetify);
 				if (security_User?.Password_Expiration_Date != null && security_User?.Password_Expiration_Date < DateTime.Now)
 				{
 					return new UserModel()
@@ -47,7 +47,7 @@ namespace API.Controllers
 					};
 				}
 
-				SeasonServices.Set("loginIn", security_User, idetify);
+				SessionServices.Set("loginIn", security_User, idetify);
 
 				var user = User(idetify);
 
@@ -66,18 +66,18 @@ namespace API.Controllers
 				};
 			}
 		}
-		static public bool ClearSeason()
+		static public bool ClearSeason(string idetify)
 		{
 			//SqlADOConexion.SQLM = null;
 			//security_User = null;
-			//SeasonServices.ClearSeason(idetify);
+			SessionServices.ClearSeason(idetify);
 			return true;
 
 		}
-		public static UserModel User(string? seassonKey)
+		public static UserModel User(string? sessionKey)
 		{
-			var security_User = SeasonServices
-				.Get<Security_Users>("loginIn", seassonKey);
+			var security_User = SessionServices
+				.Get<Security_Users>("loginIn", sessionKey);
 			if (security_User != null)
 			{
 				List<string> list = new List<string>() { };
@@ -115,8 +115,8 @@ namespace API.Controllers
 		}
 		public static UserModel User()
 		{
-			var security_User = SeasonServices
-				.Get<Security_Users>("loginIn", "seassonKey");
+			var security_User = SessionServices
+				.Get<Security_Users>("loginIn", "sessionKey");
 			if (security_User != null)
 			{
 				return new UserModel()
@@ -143,10 +143,10 @@ namespace API.Controllers
 				};
 			}
 		}
-		public static bool HaveRole(string role, string seassonKey)
+		public static bool HaveRole(string role, string sessionKey)
 		{
-			var security_User = User(seassonKey).UserData;
-			if (Authenticate(seassonKey))
+			var security_User = User(sessionKey).UserData;
+			if (Authenticate(sessionKey))
 			{
 				var AdminRole = security_User?.Security_Users_Roles?.Where(r => r?.Security_Role?.Descripcion == role).ToList();
 				if (AdminRole?.Count != 0) return true;
@@ -157,12 +157,12 @@ namespace API.Controllers
 				return false;
 			}
 		}
-		public static bool HavePermission(string permission, string seassonKey)
+		public static bool HavePermission(string permission, string sessionKey)
 		{
-			var security_User = User(seassonKey).UserData;
+			var security_User = User(sessionKey).UserData;
 			var isAdmin = security_User?.Security_Users_Roles?.Where(r => RoleHavePermission(Permissions.ADMIN_ACCESS.ToString(), r)?.Count != 0).ToList();
 			if (isAdmin != null && isAdmin?.Count != 0) return true;
-			if (Authenticate(seassonKey))
+			if (Authenticate(sessionKey))
 			{
 				var roleHavePermision = security_User?.Security_Users_Roles?.Where(r => RoleHavePermission(permission, r)?.Count != 0).ToList();
 				if (roleHavePermision != null && roleHavePermision?.Count != 0) return true;

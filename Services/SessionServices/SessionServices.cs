@@ -10,35 +10,35 @@ using Newtonsoft.Json;
 
 namespace APPCORE.Services
 {
-    public class SeasonServices
+    public class SessionServices
     {
-        public static List<SeassonData> SeassonDatas = new List<SeassonData>();
-        public static void Set(string key, Object value, string seassonKey)
+        public static List<SessionData> SessionDatas = new List<SessionData>();
+        public static void Set(string key, Object value, string sessionKey)
         {
-            var find = SeassonDatas.Find(x => x.KeyName.Equals(key) && x.idetify.Equals(seassonKey));
+            var find = SessionDatas.Find(x => x.KeyName!.Equals(key) && x.idetify!.Equals(sessionKey));
             if (find != null)
             {
-                SeassonDatas.Remove(find);
+                SessionDatas.Remove(find);
             }
-            SeassonDatas.Add(new SeassonData()
+            SessionDatas.Add(new SessionData()
             {
                 KeyName = key,
                 Value = System.Text.Json.JsonSerializer.Serialize(value),
                 created = DateTime.Now,
-                idetify = seassonKey
+                idetify = sessionKey
             });
         }
 
         public static T? Get<T>(string key, string seasonKey)
         {
-            var find = SeassonDatas.Find(x => x.KeyName.Equals(key) && x.idetify.Equals(seasonKey));
-            return find == null ? default : JsonConvert.DeserializeObject<T>(find.Value);
+            var find = SessionDatas.Find(x => x.KeyName!.Equals(key) && x.idetify!.Equals(seasonKey));
+            return find == null ? default : JsonConvert.DeserializeObject<T>(find.Value ?? "{}");
                 //System.Text.Json.JsonSerializer.Deserialize<T>(find.Value);
         }
 
         public static void ClearSeason(string seasonKey)
         {
-            SeassonDatas.RemoveAll(x => x.idetify.Equals(seasonKey));
+            SessionDatas.RemoveAll(x => x.idetify!.Equals(seasonKey));
         }
     }
 

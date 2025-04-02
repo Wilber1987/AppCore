@@ -1,9 +1,11 @@
 namespace APPCORE.Services
 {
-    public class SeassonData
+    public class SessionData:EntityClass
     {
+        [PrimaryKey]
+        public int? Id { get; set;}
         public string? KeyName { get; set; }
-        public string? Value { get; set; }
+        public string? Value { get; set; }        
         public string? idetify { get; set; }
         public DateTime? created { get; set; }
     }
