@@ -23,14 +23,14 @@ public class MailConfig
 	public string? CLIENT { get; set; }
 	public string? OBJECTID { get; set; }
 	public string? CLIENT_SECRET { get; set; }
-    public int? PORT { get; set; }
-    public string? DISPLAYNAME { get;  set; }
+	public int? PORT { get; set; }
+	public string? DISPLAYNAME { get; set; }
 }
 
 public enum HostServices
 {
 	OUTLOOK, GMAIL,
-    PRIVATE
+	PRIVATE
 }
 
 public enum AutenticationTypeEnum
@@ -50,14 +50,14 @@ public class IMAPServices
 
 
 
-	public HttpClient ApiClient { get; set; } = new HttpClient();
 	public void InitializeClient()
 	{
-		if (ApiClient == null)
-			ApiClient = new HttpClient();
+		using (HttpClient ApiClient = new HttpClient())
+		{
+			ApiClient.DefaultRequestHeaders.Accept.Clear();
+			ApiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+		}
 
-		ApiClient.DefaultRequestHeaders.Accept.Clear();
-		ApiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 	}
 	public ImapClient? GetClient(MailConfig config)
 	{
@@ -195,7 +195,7 @@ public class IMAPServices
 public class AccessTokenModel
 {
 	public string? Access_token { get; set; }
-	public string? Token_type { get; set; }	
+	public string? Token_type { get; set; }
 	public int Expires_in { get; set; }
 	public int Ext_expires_in { get; set; }
 	//error props

@@ -11,8 +11,10 @@ public class Auth2Utils
                 {"client_id",  mailConfig.CLIENT},
                 {"client_secret", mailConfig.CLIENT_SECRET}
             };
-        using HttpClient client = new();
-        var response = await client.PostAsync(url, new FormUrlEncodedContent(data));
-        return await response.Content.ReadAsAsync<AccessTokenModel>();
+        using (HttpClient client = new()) 
+        {
+            var response = await client.PostAsync(url, new FormUrlEncodedContent(data));
+            return await response.Content.ReadAsAsync<AccessTokenModel>();
+        }        
     }
 }

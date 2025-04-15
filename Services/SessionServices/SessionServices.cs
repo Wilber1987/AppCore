@@ -40,6 +40,12 @@ namespace APPCORE.Services
         {
             SessionDatas.RemoveAll(x => x.idetify!.Equals(seasonKey));
         }
+        // ✅ Limpia sesiones expiradas automáticamente
+        public static void ClearExpiredSessions()
+        {
+            DateTime now = DateTime.UtcNow;
+            SessionDatas.RemoveAll(x => x.ExpireTime < now);
+        }
     }
 
 }

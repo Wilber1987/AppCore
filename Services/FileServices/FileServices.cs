@@ -26,6 +26,7 @@ namespace APPCORE.Services
 
 				if (!IsBase64String(Attach?.Value ?? ""))
 				{
+					LoggerServices.AddMessageError("ERROR: FileService.upload", new Exception("Formato incorrecto, base64 invalido"));					
 					return new ResponseService()
 					{
 						status = 403,
@@ -68,6 +69,7 @@ namespace APPCORE.Services
 			}
 			catch (Exception ex)
 			{
+				LoggerServices.AddMessageError("ERROR: FileService.upload", ex);
 				return new ResponseService()
 				{
 					status = 500,
