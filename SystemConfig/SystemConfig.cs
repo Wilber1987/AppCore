@@ -4,27 +4,6 @@ namespace APPCORE.SystemConfig
 {
 	public class SystemConfig
 	{
-		public SystemConfig()
-		{
-			configuraciones = new Transactional_Configuraciones().Get<Transactional_Configuraciones>();
-			TITULO = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.TITULO.ToString()))?.Valor ?? TITULO;
-			SUB_TITULO = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.SUB_TITULO.ToString()))?.Valor ?? SUB_TITULO;
-			NOMBRE_EMPRESA = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.NOMBRE_EMPRESA.ToString()))?.Valor ?? NOMBRE_EMPRESA;
-			LOGO_PRINCIPAL = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.LOGO_PRINCIPAL.ToString()))?.Valor ?? LOGO_PRINCIPAL;
-			MEDIA_IMG_PATH = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.MEDIA_IMG_PATH.ToString()))?.Valor ?? MEDIA_IMG_PATH;
-			VERSION = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.VERSION.ToString()))?.Valor ?? VERSION;
-			MEMBRETE_HEADER = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.MEMBRETE_HEADER.ToString()))?.Valor ?? VERSION;
-			MEMBRETE_FOOTHER = configuraciones.Find(c => c.Nombre != null &&
-				c.Nombre.Equals(ConfiguracionesThemeEnum.MEMBRETE_FOOTHER.ToString()))?.Valor ?? VERSION;
-
-		}
 		public string TITULO = "TEMPLATE";
 		public string SUB_TITULO = "Template";
 		public string NOMBRE_EMPRESA = "TEMPLATE";
@@ -82,7 +61,7 @@ namespace APPCORE.SystemConfig
 					.Build().GetSection(sectionName.ToString())[value];
 		}
 
-		internal static MailConfig? GetSMTPDefaultConfig()
+		public static MailConfig? GetSMTPDefaultConfig()
 		{
 			string? domain = AppConfigurationValue(AppConfigurationList.Smtp, "Domain");
 			string? user = AppConfigurationValue(AppConfigurationList.Smtp, "User");

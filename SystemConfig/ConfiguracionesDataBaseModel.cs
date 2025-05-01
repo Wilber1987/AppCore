@@ -2,7 +2,7 @@ using API.Controllers;
 using APPCORE;
 namespace APPCORE.SystemConfig
 {
-	public class Transactional_Configuraciones : EntityClass
+	public abstract class  Transactional_Configuraciones : EntityClass
 	{
 		[PrimaryKey(Identity = true)]
 		public int? Id_Configuracion { get; set; }
@@ -15,23 +15,19 @@ namespace APPCORE.SystemConfig
 			Nombre = prop;
 			return Find<Transactional_Configuraciones>();
 		}
-		public static Transactional_Configuraciones GetParam(ConfiguracionesThemeEnum prop, string defaultValor = "", ConfiguracionesTypeEnum TYPE = ConfiguracionesTypeEnum.THEME)
+		public  Transactional_Configuraciones? GetParam(ConfiguracionesThemeEnum prop, string defaultValor = "", ConfiguracionesTypeEnum TYPE = ConfiguracionesTypeEnum.THEME)
 		{
+			Nombre = prop.ToString();
 
-			var find = new Transactional_Configuraciones
-			{
-				Nombre = prop.ToString(),
-			}.Find<Transactional_Configuraciones>();
+			var find = Find<Transactional_Configuraciones>();
 			if (find == null)
 			{
-				find = new Transactional_Configuraciones
-				{
-					Valor = defaultValor,
-					Descripcion = prop.ToString(),
-					Nombre = prop.ToString(),
-					Tipo_Configuracion = TYPE.ToString()
-				};
-				find.Save();
+				
+				Valor = defaultValor;
+				Descripcion = prop.ToString();
+				Nombre = prop.ToString();
+				Tipo_Configuracion = TYPE.ToString();				
+				find = (Transactional_Configuraciones?)Save();
 			}
 			return find;
 		}
@@ -64,7 +60,7 @@ namespace APPCORE.SystemConfig
 			return this.Update();
 		}
 
-		internal int GetParamNumberTemplate()
+		public int GetParamNumberTemplate()
 		{
 			return Convert.ToInt32(Find<Transactional_Configuraciones>(
 				FilterData.Equal("Nombre", ConfiguracionesThemeEnum.PARAM_NUMBER_TEMPLATE)
