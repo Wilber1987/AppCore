@@ -2,7 +2,7 @@ using APPCORE.Services;
 using Microsoft.Extensions.Configuration;
 namespace APPCORE.SystemConfig
 {
-	public class SystemConfig
+	public abstract class SystemConfig
 	{
 		public string TITULO = "TEMPLATE";
 		public string SUB_TITULO = "Template";
@@ -12,33 +12,7 @@ namespace APPCORE.SystemConfig
 		public string VERSION = "2024.07";
 		public string MEMBRETE_HEADER = "";
 		public string MEMBRETE_FOOTHER = "";
-		public List<Transactional_Configuraciones> configuraciones = new List<Transactional_Configuraciones>();
-
-		public static bool IsAutomaticCaseActive()
-		{
-			//TODO IMPLEMENTAR ESTE METODO
-			return true;
-		}
-		public static bool IsNotificationsActive()
-		{
-			//TODO IMPLEMENTAR ESTE METODO
-			return true;
-		}
-		public static bool IsMessagesActive()
-		{
-			//TODO IMPLEMENTAR ESTE METODO
-			return false;
-		}
-		public static bool IsWhatsAppActive()
-		{
-			//TODO IMPLEMENTAR ESTE METODO
-			return true;
-		}
-		public static bool IsQuestionnairesActive()
-		{
-			//TODO IMPLEMENTAR ESTE METODO
-			return false;
-		}
+		public List<Transactional_Configuraciones> configuraciones = new List<Transactional_Configuraciones>();		
 		public static IConfigurationRoot AppConfiguration()
 		{
 			return new ConfigurationBuilder()

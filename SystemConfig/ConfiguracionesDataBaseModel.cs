@@ -98,12 +98,5 @@ namespace APPCORE.SystemConfig
         TEMPLATE_IMAGE_HEADER,
         BLACK_LIST
     }
-
-	public class Config
-	{
-		public static SystemConfig SystemConfig()
-		{
-			return new SystemConfig();
-		}
-	}
+	
 }
