@@ -35,22 +35,33 @@ namespace CAPA_NEGOCIO.Util
 		public static string? GetDateName(DateTime? fecha)
 		{
 			if (fecha == null) return null;
-			return  fecha.Value.ToString("dddd, d 'del' MMMM 'del' yyyy", new CultureInfo("es-ES"));
+			return fecha.Value.ToString("dddd, d 'del' MMMM 'del' yyyy", new CultureInfo("es-ES"));
 
 		}
 		public static string? GetDateName()
 		{
-			return  DateTime.Now.ToString("dddd, d 'del' MMMM 'del' yyyy", new CultureInfo("es-ES"));
+			return DateTime.Now.ToString("dddd, d 'del' MMMM 'del' yyyy", new CultureInfo("es-ES"));
 		}
 		public static string? GetDateTimeName(DateTime? fecha)
 		{
 			if (fecha == null) return null;
-			return  fecha.Value.ToString("dddd, d 'del' MMMM 'del' yyyy hh:mm", new CultureInfo("es-ES"));
+			return fecha.Value.ToString("dddd, d 'del' MMMM 'del' yyyy hh:mm", new CultureInfo("es-ES"));
 
 		}
 		public static string? GetMonthName(DateTime? fecha)
 		{
 			return fecha!.Value.ToString("MMMM", new CultureInfo("es-ES"));
+		}
+
+		public static bool IsAfter(DateTime? fecha, int hours)
+		{
+			TimeSpan diferencia = DateTime.Now - fecha.GetValueOrDefault();
+			return diferencia.TotalHours >= hours;
+		}
+		public static bool IsBefore(DateTime? fecha, int hours)
+		{
+			TimeSpan diferencia = DateTime.Now - fecha.GetValueOrDefault();
+			return diferencia.TotalHours < hours;
 		}
 
 	}
@@ -99,7 +110,7 @@ namespace CAPA_NEGOCIO.Util
 		public static int GetCurrentYear()
 		{
 			return DateTime.Now.Year;
-		}		
+		}
 
 	}
 
