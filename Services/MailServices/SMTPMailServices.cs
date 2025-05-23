@@ -171,6 +171,10 @@ namespace APPCORE.Services
 			MailConfig config,
 			string? uid)
 		{
+			if (config.HOST == null && config.USERNAME == null)
+			{
+				return false;
+			}
 			try
 			{
 				//var templatePage = Path.Combine(System.IO.Path.GetFullPath("../UI/Pages/Mails"), path);

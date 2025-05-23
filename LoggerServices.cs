@@ -148,6 +148,7 @@ namespace APPCORE
 
 	public enum LogType
 	{
-		ERROR, INFO, ACTION
-	}
+		ERROR, INFO, ACTION,
+        MEMORYINFO
+    }
 }

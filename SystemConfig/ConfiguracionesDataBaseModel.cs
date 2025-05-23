@@ -2,7 +2,7 @@ using API.Controllers;
 using APPCORE;
 namespace APPCORE.SystemConfig
 {
-	public abstract class  Transactional_Configuraciones : EntityClass
+	public class  Transactional_Configuraciones : EntityClass
 	{
 		[PrimaryKey(Identity = true)]
 		public int? Id_Configuracion { get; set; }
