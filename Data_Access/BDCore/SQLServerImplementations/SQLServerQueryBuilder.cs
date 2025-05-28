@@ -210,15 +210,17 @@ namespace APPCORE.BDCore.Implementations
 		este método toma un nombre, un valor, un tipo de datos y una propiedad de una entidad, y crea un parámetro SqlParameter configurado correctamente 
 		para su uso en consultas SQL parametrizadas con SQL Server. Si la propiedad tiene un atributo JsonProp, el valor se trata como JSON; de lo contrario,
 		se asigna directamente al parámetro.*/
-		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty)
+		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty, bool isJsonFilter = false)
 		{
 			// Determinar el tipo de datos SQL correspondiente al tipo de datos proporcionado
 			SqlDbType sqlDbType;
+			bool isString = false;
 			switch (dataType)
 			{
 				case "nvarchar":
 				case "varchar":
 				case "char":
+					isString = true;
 					sqlDbType = SqlDbType.NVarChar;
 					break;
 				case "float":
@@ -246,10 +248,9 @@ namespace APPCORE.BDCore.Implementations
 					//Lanzar una excepción si el tipo de datos no es compatible
 					throw new ArgumentException($"Tipo de datos no soportado: {dataType}");
 			}
-
 			// Verificar si la propiedad tiene el atributo JsonProp
 			JsonProp? jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(oProperty, typeof(JsonProp));
-			if (jsonPropAttribute != null)
+			if (jsonPropAttribute != null && !isJsonFilter )
 			{
 				// Tratar el valor como JSON si la propiedad tiene el atributo JsonProp
 				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);// JsonConvert.SerializeObject(value);

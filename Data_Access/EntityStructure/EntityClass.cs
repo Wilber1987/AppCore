@@ -5,6 +5,7 @@ using APPCORE.BDCore.Abstracts;
 
 namespace APPCORE;
 // Clase abstracta base para todas las entidades del sistema
+//TODO CRUZAR LA APRTURA Y CIERRE DE TRANSACCIONES Y CONEXIONES A DTAMAPER 
 public abstract class EntityClass : TransactionalClass
 {
 	private List<FilterData>? filters;

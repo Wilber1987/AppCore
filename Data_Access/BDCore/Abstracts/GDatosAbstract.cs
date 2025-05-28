@@ -288,9 +288,7 @@ namespace APPCORE
 						resultTable.Load(reader);
 					}
 					return resultTable;
-
 				}
-
 			});
 		}
 

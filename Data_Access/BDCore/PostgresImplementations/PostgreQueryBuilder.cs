@@ -142,16 +142,16 @@ namespace APPCORE.PostgresImplementations
 			if (pkInfo != null)
 			{
 				string condition = " " + oneToOne?.KeyColumn + " = " + tableAlias + "." + oneToOne?.ForeignKeyColumn;
-				(string subquery, _, _) = BuildSelectQuery(oneToOneInstance, condition,  recursionDepth: recursionDepth + 1);
+				(string subquery, _, _) = BuildSelectQuery(oneToOneInstance, condition, recursionDepth: recursionDepth + 1);
 				Columns = Columns + $" to_jsonb(({subquery})) as {AtributeName},";
 			}
 
 			return Columns;
 		}
 
-		private string IncludeManyToOneObjectInQuery(EntityClass Inst, 
+		private string IncludeManyToOneObjectInQuery(EntityClass Inst,
 			string Columns, string tableAlias,
-			PropertyInfo oProperty, string AtributeName, 
+			PropertyInfo oProperty, string AtributeName,
 			ManyToOne? manyToOne, int recursionDepth) // Agregado recursionDepth
 		{
 			// Construir subconsulta JSON para la relación "ManyToOne"
@@ -209,7 +209,7 @@ namespace APPCORE.PostgresImplementations
 		este método toma un nombre, un valor, un tipo de datos y una propiedad de una entidad, y crea un parámetro NpgsqlParameter configurado correctamente 
 		para su uso en consultas SQL parametrizadas con SQL Server. Si la propiedad tiene un atributo JsonProp, el valor se trata como JSON; de lo contrario,
 		se asigna directamente al parámetro.*/
-		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty)
+		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty, bool isJsonFilter = false)
 		{
 			// Determinar el tipo de datos SQL correspondiente al tipo de datos proporcionado
 			NpgsqlDbType sqlDbType;

@@ -213,7 +213,7 @@ namespace APPCORE.BDCore.MySqlImplementations
 		se asigna directamente al parámetro.*/
 
 
-		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty)
+		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty, bool isJsonFilter = false)
 		{
 			// Determinar el tipo de datos SQL correspondiente al tipo de datos proporcionado
 			MySqlDbType sqlDbType;

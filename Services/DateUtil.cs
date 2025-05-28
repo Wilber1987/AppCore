@@ -63,6 +63,18 @@ namespace CAPA_NEGOCIO.Util
 			TimeSpan diferencia = DateTime.Now - fecha.GetValueOrDefault();
 			return diferencia.TotalHours < hours;
 		}
+		public static bool IsAffterNDays(DateTime? fecha, int dias)
+		{
+			if (!fecha.HasValue)
+				return false;
+
+			DateTime fechaInicio = fecha.Value.Date;
+			DateTime fechaActual = DateTime.Now.Date;
+
+			int diasTranscurridos = (fechaActual - fechaInicio).Days;
+
+			return diasTranscurridos >= dias;
+		}
 
 	}
 

@@ -34,7 +34,7 @@ namespace APPCORE.BDCore.Abstracts
 
 		Por ejemplo, si estás trabajando con SQL Server, la implementación de este método podría crear un SqlParameter y configurarlo con el nombre,
 		valor y tipo de datos proporcionados. Si estás trabajando con MySQL, la implementación podría crear un MySqlParameter de manera similar.*/
-		public abstract IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty);
+		public abstract IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty, bool isJsonFilter = false);
 		/*Este método BuildUpdateQueryByObject construye una consulta de actualización SQL basada en un objeto de clase 
 		de entidad y un conjunto de propiedades de "donde" (condiciones de actualización). este método recorre las propiedades 
 		del objeto de la clase de entidad y construye una consulta de actualización SQL basada en las propiedades proporcionadas
@@ -344,22 +344,22 @@ namespace APPCORE.BDCore.Abstracts
 					}
 					break;
 				case "JSONPROP_EQUAL":
-					PropertyInfo? propJSON = props.ToList().Find(p => p.Name.ToLower().Equals(filter?.ObjectName?.ToLower())); // Obtiene la propiedad correspondiente al nombre proporcionado en el filtro
-					if (propJSON != null)
+					//PropertyInfo? propJSON = props.ToList().Find(p => p.Name.ToLower().Equals(filter?.ObjectName?.ToLower())); // Obtiene la propiedad correspondiente al nombre proporcionado en el filtro
+					if (prop != null)
 					{
-						AtributeName = propJSON.Name;
-						jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(propJSON, typeof(JsonProp));
+						AtributeName = prop.Name;
+						jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(prop, typeof(JsonProp));
 						if (filter?.Values?.Count > 0 && jsonPropAttribute != null)
 						{
 							string paramName = $"@{AtributeName}_{parameters.Count + 1}";
-							IDbDataParameter parameter1 = CreateParameter(paramName, filter.Values[0], filter.PropSQLType, prop);
+							IDbDataParameter parameter1 = CreateParameter(paramName, filter.Values[0], filter.PropSQLType, prop, true);
 							parameters.Add(parameter1);
 							// Construimos la condición con JSON_VALUE
-							CondicionString += $" JSON_VALUE({AtributeName}, '$.{filter.PropName}') = {paramName} ";
+							CondicionString += $" JSON_VALUE({AtributeName}, '$.{filter.JsonPropName}') = {paramName} ";
 						}
 						else
 						{
-							throw new Exception($"el valor no puede ser null y debe existir en la entidad con el atributo JsonProp {filter?.ObjectName}");
+							throw new Exception($"el valor no puede ser null y debe existir en la entidad con el atributo JsonProp {filter?.JsonPropName}");
 						}
 					}
 					break;

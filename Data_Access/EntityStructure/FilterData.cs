@@ -2,7 +2,7 @@ namespace APPCORE
 {
 	public class FilterData
 	{
-		public string? ObjectName { get; set; }//nombre del objeto o identidad, actalmente solo es util para json querys
+		public string? JsonPropName { get; set; }//nombre de la propiedaD DEL objeto o identidad, actalmente solo es util para json querys
 		public string? PropName { get; set; }
 		public string? PropSQLType { get; set; }//tipo de la propiedad del objeto o identidad, actalmente solo es util para json querys
 
