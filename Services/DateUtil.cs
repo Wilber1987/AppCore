@@ -31,6 +31,16 @@ namespace CAPA_NEGOCIO.Util
 				return date;
 			}
 		}
+		public static string? GetDateName(DateTime? fecha, Boolean showDay)
+		{
+			if (fecha == null) return null;
+			if (showDay)
+			{
+				return  fecha.Value.ToString("dddd, d 'del' MMMM 'del' yyyy", new CultureInfo("es-ES"));	
+			}
+			return  fecha.Value.ToString("d 'del' MMMM 'del' yyyy", new CultureInfo("es-ES"));
+
+		}
 
 		public static string? GetDateName(DateTime? fecha)
 		{

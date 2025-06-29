@@ -120,7 +120,7 @@ namespace APPCORE
 		/*Between*/
 		public static FilterData Between(string? propName, DateTime value, DateTime value2)
 		{
-			return new FilterData { PropName = propName, FilterType = "BETWEEN", Values = new List<string?> { value.ToString("yyyy/MM/dd hh:mm:ss"), value2.ToString("yyyy/MM/dd hh:mm:ss")}};
+			return new FilterData { PropName = propName, FilterType = "BETWEEN", Values = new List<string?> { value.ToString("yyyy/MM/dd hh:mm:ss"), value2.ToString("yyyy/MM/dd hh:mm:ss") } };
 		}
 		public static FilterData Between(string? propName, int value, int value2)
 		{
@@ -134,7 +134,7 @@ namespace APPCORE
 		{
 			return new FilterData { PropName = propName, FilterType = "IsNull" };
 		}
-		
+
 		public static FilterData NotNull(string propName)
 		{
 			return new FilterData { PropName = propName, FilterType = "NotNull" };
@@ -167,6 +167,17 @@ namespace APPCORE
 			return new FilterData { FilterType = "limit", Values = new List<string?> { value.ToString() } };
 		}
 
+		public static FilterData JsonPropEqual(string? propName, string? jsonPropName, object? value, string? type)
+		{
+			return new FilterData
+			{
+				PropName = propName,
+				JsonPropName = jsonPropName,
+				FilterType = "JSONPROP_EQUAL",
+				PropSQLType = type,
+				Values = [value?.ToString()]
+			};
+		}
 	}
 	public class OrdeData
 	{

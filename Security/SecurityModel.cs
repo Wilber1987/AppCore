@@ -105,45 +105,21 @@ namespace APPCORE.Security
 			{
 				throw new Exception("no tiene permisos");
 			}
-			return Save_User();
+			return Save_User(new Tbl_Profile()
+			{
+				Nombres = this.Nombres,
+				Estado = this.Estado,
+				Correo_institucional = this.Mail,
+				Foto = "\\Media\\profiles\\avatar.png"
+			});
 		}
 
-		public object Save_User()
+		public object Save_User(Tbl_Profile? tbl_Profile)
 		{
 			try
 			{
 				this.BeginGlobalTransaction();
-				if (this.Password != null)
-				{
-					this.Password = EncrypterServices.Encrypt(this.Password);
-				}
-				if (this.Id_User == null)
-				{
-					if (new Security_Users() { Mail = this.Mail }.Exists())
-					{
-						throw new Exception("Correo en uso");
-					}
-					var user = Save();
-				}
-				else
-				{
-					if (this.Estado == null)
-					{
-						this.Estado = "ACTIVO";
-					}
-					this.Update();
-				}
-				if (this.Security_Users_Roles != null)
-				{
-					Security_Users_Roles IdI = new Security_Users_Roles();
-					IdI.Id_User = this.Id_User;
-					IdI.Delete();
-					foreach (Security_Users_Roles obj in this.Security_Users_Roles)
-					{
-						obj.Id_User = this.Id_User;
-						obj.Save();
-					}
-				}
+				DoSaveUser(tbl_Profile);
 				this.CommitGlobalTransaction();
 				return this;
 			}
@@ -152,6 +128,58 @@ namespace APPCORE.Security
 				this.RollBackGlobalTransaction();
 				throw;
 			}
+		}
+
+		public object DoSaveUser(Tbl_Profile? tbl_Profile)
+		{
+			Security_Users? userF = null;
+			if (Id_User != null)
+			{
+				userF = new Security_Users { Id_User = Id_User }.Find<Security_Users>();
+			}
+
+			if (this.Password != null)
+			{
+				this.Password = EncrypterServices.Encrypt(this.Password);
+				if (userF != null && userF.Password_Expiration_Date != null)
+				{
+					this.Password_Expiration_Date = DateTime.Now.AddDays(30);
+				}
+			}
+			if (this.Id_User == null)
+			{
+				if (new Security_Users() { Mail = this.Mail }.Exists())
+				{
+					throw new Exception("Correo en uso");
+				}
+				var user = Save();
+				if (tbl_Profile != null)
+				{
+					tbl_Profile.IdUser = ((Security_Users?)user)?.Id_User;
+					tbl_Profile.Save();
+				}
+
+			}
+			else
+			{
+				if (this.Estado == null)
+				{
+					this.Estado = "ACTIVO";
+				}
+				this.Update("Id_User");
+			}
+			if (this.Security_Users_Roles != null)
+			{
+				Security_Users_Roles IdI = new Security_Users_Roles();
+				IdI.Id_User = this.Id_User;
+				IdI.Delete();
+				foreach (Security_Users_Roles obj in this.Security_Users_Roles)
+				{
+					obj.Id_User = this.Id_User;
+					obj.Save();
+				}
+			}
+			return this;
 		}
 
 		public object GetUsers()
@@ -197,6 +225,27 @@ namespace APPCORE.Security
 			Password = EncrypterServices.Encrypt(Password);
 			Id_User = security_User?.Id_User;
 			return Update();
+		}
+		
+		internal object RecoveryPassword(MailConfig? config, string? passwordE = null)
+		{
+			Security_Users? user = this.Find<Security_Users>();
+			if (user != null && user.Estado == "ACTIVO")
+			{
+				string password = passwordE ?? Guid.NewGuid().ToString();
+				user.Password = EncrypterServices.Encrypt(password);
+				user.Update();
+				_ = SMTPMailServices.SendMail("support@password.recovery",
+				 [user.Mail],
+				 "Recuperación de contraseña",
+				 $"nueva contraseña: {password}", null, null, config);
+				return user;
+			}
+			if (user?.Estado == "INACTIVO")
+			{
+				throw new Exception("usuario inactivo");
+			}
+			return null;
 		}
 	}
 

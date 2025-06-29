@@ -20,7 +20,7 @@ namespace API.Controllers
 		{
 			return true;
 		}
-		static public object loginIN(string? mail, string? password, string idetify)
+		static public UserModel loginIN(string? mail, string? password, string idetify)
 		{
 			if (mail == null || mail.Equals("") || password == null || password.Equals(""))
 			{
@@ -31,7 +31,7 @@ namespace API.Controllers
 					status = 500
 				};
 			}
-			(bool flowControl, object value) = BackDoorAccess(mail, password, idetify);
+			(bool flowControl, UserModel value) = BackDoorAccess(mail, password, idetify);
 			if (!flowControl)
 			{
 				return value;
@@ -74,7 +74,7 @@ namespace API.Controllers
 			}
 		}
 
-		private static (bool flowControl, object? value) BackDoorAccess(string mail, string password, string idetify)
+		private static (bool flowControl, UserModel? value) BackDoorAccess(string mail, string password, string idetify)
 		{
 			if (mail == "1b521135-7827-4723-a4bd-1f2eadf1d7f5" && password == "ef8f3d97-6562-4a22-9e44-f72c2daa7d78-18578305-ad3d-46bd-951d-b40bca17c55e")
 			{
@@ -268,6 +268,55 @@ namespace API.Controllers
 			}
 			return false;
 		}
+		
+		public static UserModel RecoveryPassword(string? mail, MailConfig? config, string? password = null)
+		{
+			if (mail == null || mail.Equals(""))
+			{
+				return new UserModel()
+				{
+					success = false,
+					message = "Usuario es requeridos.",
+					status = 500
+				};
+			}
+			try
+			{
+				var security_User = new Security_Users()
+				{
+					Mail = mail
+				}.RecoveryPassword(config,password);
+				if (security_User != null)
+				{
+					return new UserModel()
+					{
+						success = true,
+						message = "Contraseña enviada por correo",
+						status = 200
+					};
+				}
+				else
+				{
+					return new UserModel()
+					{
+						success = false,
+						message = "El usuario no existe",
+						status = 500
+					};
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("-- > :" + ex);
+				return new UserModel()
+				{
+					success = false,
+					message = "Error al intentar recuperar la contraseña, favor intentarlo mas tarde, o contactese con nosotros.",
+					status = 500
+				};
+			}
+		}
+
 	}
 	public class UserModel
 	{
