@@ -23,10 +23,10 @@ namespace APPCORE.Services
 		
 		public static MailConfig Config = new MailConfig() { HOST = HOST, PASSWORD = PASSWORD, USERNAME = USERNAME , AutenticationType = AutenticationTypeEnum.BASIC };
 
-		public async static Task<bool> SendMail(string from,
-		   List<string> toMails,
-		   string subject,
-		   string body,
+		public async static Task<bool> SendMail(string? from,
+		   List<string>? toMails,
+		   string? subject,
+		   string? body,
 		   List<ModelFiles>? attach,
 		   string? uid,
 		   MailConfig? config)
