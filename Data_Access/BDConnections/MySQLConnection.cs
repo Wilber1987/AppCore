@@ -31,6 +31,7 @@ public class MySQLConnection
         string userSQLConexion = $"Server={MySQLServer};Port={Port};User ID={SGBD_USER};Password={SWGBD_PASSWORD};Database={BDNAME};";
         SQLM = new WDataMapper(new MySqlGDatos(userSQLConexion), new MySQLQueryBuilder());
         SQLM.GDatos.Database = BDNAME;
+        SQLM.GDatos.GetSqlType = SqlEnumType.MYSQL;
         if (SQLM.GDatos.TestConnection())
         {
             return true;
@@ -42,18 +43,23 @@ public class MySQLConnection
         }
     }
 
-    public static WDataMapper? BuildDataMapper(string MySQLServer, string SGBD_USER, string SWGBD_PASSWORD, string BDNAME, int Port = 3306)
+    public static WDataMapper? BuildDataMapper(string MySQLServer,
+    string SGBD_USER,
+    string SWGBD_PASSWORD,
+    string BDNAME,
+    int Port = 3306)
     {
         string userSQLConexion = $"Server={MySQLServer};Port={Port};User ID={SGBD_USER};Password={SWGBD_PASSWORD};Database={BDNAME};SslMode=None;";
         WDataMapper mapper = new WDataMapper(new MySqlGDatos(userSQLConexion), new MySQLQueryBuilder());
         mapper.GDatos.Database = BDNAME;
-        if (mapper.GDatos.TestConnection() == false)
+        mapper.GDatos.GetSqlType = SqlEnumType.MYSQL;
+        /*if (mapper.GDatos.TestConnection() == false)
         {
             return null;
-        }
+        }*/
         return mapper;
     }
-    
+
     public static WDataMapper? BuildDataMapper(
                 string MySQLServer,
                 string SGBD_USER,
@@ -109,13 +115,14 @@ public class MySQLConnection
         string userSQLConexion = $"Server={MySQLServer};Port={Port};User ID={SGBD_USER};Password={SWGBD_PASSWORD};Database={BDNAME};";
         WDataMapper mapper = new WDataMapper(new MySqlGDatos(userSQLConexion), new MySQLQueryBuilder());
         mapper.GDatos.Database = BDNAME;
+        mapper.GDatos.GetSqlType = SqlEnumType.MYSQL;
         if (mapper.GDatos.TestConnection() == false)
         {
             return null;
         }
         return mapper;
     }
-   
+
 }
 
 

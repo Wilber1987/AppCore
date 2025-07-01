@@ -134,7 +134,7 @@ namespace APPCORE
 					{
 						SqlEnumType.SQL_SERVER => SQLServerEntityQuerys.DescribeEntitys,
 						SqlEnumType.POSTGRES_SQL => PostgreEntityQuerys.DescribeEntitys,
-						SqlEnumType.MYSQL => MySqlEntityQuerys.DescribeEntitys.Replace("entityDatabase", Database),
+						SqlEnumType.MYSQL => MySqlEntityQuerys.DescribeEntityQuery.Replace("entityDatabase", Database),
 						_ => ""
 					};
 					this.EntityDescription = AdapterUtil.ConvertDataTable<EntityProps>(
