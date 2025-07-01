@@ -305,8 +305,8 @@ namespace APPCORE.BDCore.Abstracts
 					{
 						((EntityClass)itemToDelete).SetConnection(entity.GetConnection());
 						((EntityClass)itemToDelete).SetSqlConnection(entity.GetSqlConnection());
-						((EntityClass)itemToDelete).SetTransaction(entity.GetTransaction());						
-						Delete((EntityClass)itemToDelete);	
+						((EntityClass)itemToDelete).SetTransaction(entity.GetTransaction());
+						Delete((EntityClass)itemToDelete);
 					}
 
 					// Inserta o actualiza los elementos de la lista entrante
@@ -315,10 +315,10 @@ namespace APPCORE.BDCore.Abstracts
 						// Obtiene las propiedades de la clave primaria y externa en el objeto relacionado
 						PropertyInfo? keyColumn = entity?.GetType().GetProperty(oneToMany?.KeyColumn);
 						PropertyInfo? foreignKeyColumn = value.GetType().GetProperty(oneToMany?.ForeignKeyColumn);
-						
+
 						if (foreignKeyColumn != null)
 						{
-							EntityClass entityValue =  (EntityClass)value;
+							EntityClass entityValue = (EntityClass)value;
 							entityValue?.SetSqlConnection(entity.GetSqlConnection());
 							entityValue?.SetTransaction(entity.GetTransaction());
 							// Obtiene el valor de la clave primaria del objeto principal y llama a InsertRelationatedObject para insertar el objeto relacionado
@@ -561,20 +561,24 @@ namespace APPCORE.BDCore.Abstracts
 
 		internal List<EntityProps> DescribeEntity(EntityClass entityClass)
 		{
+			if (GDatos.GetSqlType == SqlEnumType.MYSQL)
+			{
+				GDatos.TestConnection();
+			}
 			return GDatos.EntityDescription?.Where(x => x.TABLE_NAME.ToLower() == entityClass.GetType().Name.ToLower()).ToList() ?? new List<EntityProps>();
 		}
 
-        internal void SetPropertyNull(EntityClass entityClass, params string[]  propertys)
-        {
-            string? strQuery = QueryBuilder.BuildUpdateNullsPropertys(entityClass, propertys);
+		internal void SetPropertyNull(EntityClass entityClass, params string[] propertys)
+		{
+			string? strQuery = QueryBuilder.BuildUpdateNullsPropertys(entityClass, propertys);
 
-// Si la consulta de actualización no es nula, ejecuta la consulta SQL
+			// Si la consulta de actualización no es nula, ejecuta la consulta SQL
 			if (strQuery != null)
 			{
 				GDatos?.ExcuteSqlQuery(strQuery, entityClass.GetSqlConnection(), entityClass.GetTransaction());
 			}
-        }
-        /*
+		}
+		/*
 * Utlizado para la lectura de los datos
 
 protected (DataTable, int)? BuildTablePaginated(EntityClass Inst, ref string CondSQL, int pageNum, int pageSize, string orderBy, string orderDir,
@@ -583,6 +587,6 @@ bool fullEntity = true, bool isFind = true)
 (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQueryPaginated(Inst, CondSQL, pageNum, pageSize, orderBy, orderDir, fullEntity, isFind);
 return GDatos?.BuildTablePaginated(queryString, queryCount, parameters);
 }*/
-        #endregion
-    }
+		#endregion
+	}
 }

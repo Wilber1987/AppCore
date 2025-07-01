@@ -9,7 +9,7 @@ namespace APPCORE.BDCore.MySqlImplementations
     {
         public static string DescribeEntityQuery = @"
             SELECT COLUMN_NAME AS 'COLUMN_NAME', IS_NULLABLE as 'IS_NULLABLE', 
-            DATA_TYPE as 'DATA_TYPE', TABLE_SCHEMA as 'TABLE_SCHEMA', TABLE_NAME as 'TABLE_NAME'
+            DATA_TYPE as 'DATA_TYPE', TABLE_SCHEMA as 'TABLE_SCHEMA'
             FROM INFORMATION_SCHEMA.COLUMNS 
             WHERE TABLE_NAME = 'entityName' 
             AND TABLE_SCHEMA = 'entityDatabase' 
@@ -25,3 +25,4 @@ namespace APPCORE.BDCore.MySqlImplementations
         ";
     }
 }
+

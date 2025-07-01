@@ -47,7 +47,7 @@ public class MySQLConnection
         string userSQLConexion = $"Server={MySQLServer};Port={Port};User ID={SGBD_USER};Password={SWGBD_PASSWORD};Database={BDNAME};SslMode=None;";
         WDataMapper mapper = new WDataMapper(new MySqlGDatos(userSQLConexion), new MySQLQueryBuilder());
         mapper.GDatos.Database = BDNAME;
-        if (SQLM?.GDatos.TestConnection() == false)
+        if (mapper.GDatos.TestConnection() == false)
         {
             return null;
         }
@@ -109,12 +109,10 @@ public class MySQLConnection
         string userSQLConexion = $"Server={MySQLServer};Port={Port};User ID={SGBD_USER};Password={SWGBD_PASSWORD};Database={BDNAME};";
         WDataMapper mapper = new WDataMapper(new MySqlGDatos(userSQLConexion), new MySQLQueryBuilder());
         mapper.GDatos.Database = BDNAME;
-
-        if (SQLM?.GDatos.TestConnection() == false)
+        if (mapper.GDatos.TestConnection() == false)
         {
             return null;
         }
-
         return mapper;
     }
    

@@ -85,7 +85,7 @@ namespace APPCORE.BDCore.MySqlImplementations
 			// Obtener la propiedad de límite de filtro
 			FilterData? filterLimit = Inst.filterData?.Find(f =>
 					f.FilterType?.ToLower().Contains("limit") == true);
-					// Obtener la propiedad de límite de filtro
+			// Obtener la propiedad de límite de filtro
 			FilterData? filterPaginated = Inst.filterData?.Find(f =>
 					f.FilterType?.ToLower().Contains("paginated") == true);
 
@@ -113,7 +113,7 @@ namespace APPCORE.BDCore.MySqlImplementations
 			var oneToManyInstance = (EntityClass?)Activator.CreateInstance(oProperty.PropertyType.GetGenericArguments()[0]);
 			if (oneToManyInstance != null)
 			{
-				//oneToManyInstance.SetConnection(Inst.GetConnection());
+				oneToManyInstance.SetConnection(Inst.GetConnection());
 			}
 			string condition = " " + oneToMany?.ForeignKeyColumn + " = " + tableAlias + "." + oneToMany?.KeyColumn;
 			(string subquery, _, _) = BuildSelectQuery(oneToManyInstance, condition);
@@ -130,7 +130,7 @@ namespace APPCORE.BDCore.MySqlImplementations
 			var oneToOneInstance = (EntityClass?)Activator.CreateInstance(oProperty.PropertyType);
 			if (oneToOneInstance != null)
 			{
-				//oneToOneInstance.SetConnection(Inst.GetConnection());
+				oneToOneInstance.SetConnection(Inst.GetConnection());
 			}
 			List<PropertyInfo> primaryKeyProperties = lst.Where(p => Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).ToList();
 			PrimaryKey? pkInfo = (PrimaryKey?)Attribute.GetCustomAttribute(primaryKeyProperties[0], typeof(PrimaryKey));
@@ -149,7 +149,7 @@ namespace APPCORE.BDCore.MySqlImplementations
 			var manyToOneInstance = (EntityClass?)Activator.CreateInstance(oProperty.PropertyType);
 			if (manyToOneInstance != null)
 			{
-				//manyToOneInstance.SetConnection(Inst.GetConnection());
+				manyToOneInstance.SetConnection(Inst.GetConnection());
 			}
 			string condition = " " + manyToOne?.KeyColumn + " = " + tableAlias + "." + manyToOne?.ForeignKeyColumn;
 			(string subquery, _, _) = BuildSelectQuery(manyToOneInstance, condition);
@@ -167,10 +167,11 @@ namespace APPCORE.BDCore.MySqlImplementations
 			else
 			{
 				if (EntityProp?.DATA_TYPE.ToLower() == "date")
-				{					
+				{
 					Columns = Columns + $"CASE WHEN {AtributeName} < '1753-01-01' THEN CAST('1990-01-01 00:00:00' AS DATETIME) ELSE CAST(CONCAT({AtributeName}, ' 00:00:00') AS DATETIME) END AS {AtributeName},";
-				}else if (EntityProp?.DATA_TYPE.ToLower() == "bit")
-				{					
+				}
+				else if (EntityProp?.DATA_TYPE.ToLower() == "bit")
+				{
 					Columns = Columns + $"CASE WHEN {AtributeName} = '1' THEN 'true' ELSE 'false' END AS {AtributeName},";
 				}
 				else
@@ -178,7 +179,7 @@ namespace APPCORE.BDCore.MySqlImplementations
 					Columns = Columns + AtributeName + ",";
 				}
 
-		
+
 			}
 			var AtributeValue = oProperty.GetValue(Inst);
 			if (AtributeValue != null && jsonProp == null)
@@ -205,12 +206,6 @@ namespace APPCORE.BDCore.MySqlImplementations
 
 			return (queryString, queryCount, parameters);
 		}
-		/*Este método CreateParameter es la implementaciion de su abstracto en sql server y crear un parámetro IDbDataParameter para su uso en consultas
-		SQL con SQL Server.
-		
-		este método toma un nombre, un valor, un tipo de datos y una propiedad de una entidad, y crea un parámetro NpgsqlParameter configurado correctamente 
-		para su uso en consultas SQL parametrizadas con SQL Server. Si la propiedad tiene un atributo JsonProp, el valor se trata como JSON; de lo contrario,
-		se asigna directamente al parámetro.*/
 
 
 		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty, bool isJsonFilter = false)
@@ -255,6 +250,9 @@ namespace APPCORE.BDCore.MySqlImplementations
 				case "date":
 					sqlDbType = MySqlDbType.Date;
 					break;
+				case "tinyint":					
+					sqlDbType = value is byte ? MySqlDbType.UByte : MySqlDbType.Byte;
+					break;
 				default:
 					// Lanzar una excepción si el tipo de datos no es compatible
 					throw new ArgumentException($"Tipo de datos no soportado: {dataType}");
@@ -271,10 +269,15 @@ namespace APPCORE.BDCore.MySqlImplementations
 			}
 			else
 			{
+				if (dataType.ToUpper() == "DATE" || dataType.ToUpper() == "DATETIME")
+				{
+					return new MySqlParameter(name, sqlDbType) {Value =  Convert.ToDateTime(value.ToString()).ToString("yyyy-MM-dd")};
+				} 
 				// Crear un parámetro normal si la propiedad no tiene el atributo JsonProp
 				return new MySqlParameter(name, sqlDbType) { Value = value };
 			}
 		}
+
 
 
 		protected override SqlEnumType GetSqlType()
