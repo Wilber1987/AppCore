@@ -157,6 +157,10 @@ namespace APPCORE.BDCore.Abstracts
 				{
 					// Obtiene la información del atributo ManyToOne
 					ManyToOne? manyToOne = (ManyToOne?)Attribute.GetCustomAttribute(manyToOneProp, typeof(ManyToOne));
+					if (manyToOne!.isView)
+					{
+						continue;
+					}
 
 					// Obtiene las propiedades de la clave primaria y externa
 					PropertyInfo? keyColumn = attributeValue.GetType().GetProperty(manyToOne?.KeyColumn);
