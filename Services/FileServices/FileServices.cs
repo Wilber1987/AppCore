@@ -15,7 +15,7 @@ namespace APPCORE.Services
 			try
 			{
 
-				string Carpeta = @"\wwwroot\Media\" + path;
+				string Carpeta = @"\wwwroot\" + path;
 				string Ruta = Directory.GetCurrentDirectory() + Carpeta;
 				if (!Directory.Exists(Ruta))
 				{
@@ -39,7 +39,7 @@ namespace APPCORE.Services
 				}
 
 				byte[] File64 = Convert.FromBase64String(Attach?.Value ?? "");
-				string[]? extension = Attach?.Type?.Split(new string[] { "data:" }, StringSplitOptions.RemoveEmptyEntries);
+				string[]? extension = Attach?.Type?.Split(["data:"], StringSplitOptions.RemoveEmptyEntries);
 				string MimeType = "";
 				if (extension?.Length > 0)
 				{
@@ -236,9 +236,9 @@ namespace APPCORE.Services
 			// Si no hay coincidencia, simplemente devolvemos la cadena original
 			return input;
 		}
-		public static string? setImage(string image)
+		public static string? setImage(string image, string path)
 		{
-			return ((ModelFiles?)FileService.upload("image_tests\\", new ModelFiles { Type = "png", Value = image, Name = "" })?.body)?.Value?.Replace("wwwroot", "");
+			return ((ModelFiles?)FileService.upload(path, new ModelFiles { Type = "png", Value = image, Name = "" })?.body)?.Value?.Replace("wwwroot", "");
 		}
 	}
 

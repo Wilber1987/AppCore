@@ -9,9 +9,11 @@ namespace APPCORE.SystemConfig
 		public string NOMBRE_EMPRESA = "TEMPLATE";
 		public string LOGO_PRINCIPAL = "logo.png";
 		public string MEDIA_IMG_PATH = "/media/img/";
+		public string MEDIA_ATTACH_PATH ="/media/";
 		public string VERSION = "2024.07";
 		public string MEMBRETE_HEADER = "";
 		public string MEMBRETE_FOOTHER = "";
+		public bool USE_ONLY_FILE_NAME = false;
 		public List<Transactional_Configuraciones> configuraciones = new List<Transactional_Configuraciones>();		
 		public static IConfigurationRoot AppConfiguration()
 		{
