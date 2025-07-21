@@ -237,12 +237,13 @@ public abstract class EntityClass : TransactionalClass
 		{
 			conn.Open();
 			var transaction = conn.BeginTransaction();
-			this.SetSqlConnection(conn);
-			this.SetTransaction(transaction);
+			SetSqlConnection(conn);
+			SetTransaction(transaction);
 			try
 			{
 				// Actualiza la entidad en la base de datos utilizando el identificador proporcionado
 				MDataMapper?.UpdateObject(this, Id);
+				transaction?.Commit();
 				// Retorna verdadero para indicar que la operación fue exitosa
 				return true;
 			}

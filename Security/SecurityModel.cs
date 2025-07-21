@@ -105,27 +105,28 @@ namespace APPCORE.Security
 			{
 				throw new Exception("no tiene permisos");
 			}
-			return Save_User(new Tbl_Profile()
+			Save_User(new Tbl_Profile()
 			{
 				Nombres = this.Nombres,
 				Estado = this.Estado,
 				Correo_institucional = this.Mail,
 				Foto = "\\Media\\profiles\\avatar.png"
 			});
+			return new ResponseService(200, "Actualización exitosa");
 		}
 
 		public object Save_User(Tbl_Profile? tbl_Profile)
 		{
 			try
 			{
-				this.BeginGlobalTransaction();
+				//this.BeginGlobalTransaction();
 				DoSaveUser(tbl_Profile);
-				this.CommitGlobalTransaction();
+				//this.CommitGlobalTransaction();
 				return this;
 			}
 			catch (System.Exception)
 			{
-				this.RollBackGlobalTransaction();
+				//this.RollBackGlobalTransaction();
 				throw;
 			}
 		}
