@@ -33,12 +33,12 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
+			conn?.Open();
 			this.SetSqlConnection(conn);
 			// Llama al método TakeList de MDataMapper para obtener datos
 			var Data = MDataMapper?.TakeList<T>(this, condition);
 			// Retorna los datos obtenidos o una lista vacía si es nulo
-			return Data.ToList() ?? new List<T>();
+			return Data?.ToList() ?? new List<T>();
 		}
 	}
 
@@ -60,7 +60,7 @@ public abstract class EntityClass : TransactionalClass
 		filterData.AddRange(where_condition.ToList());
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
+			conn?.Open();
 			this.SetSqlConnection(conn);
 
 			// Se obtienen los datos utilizando el filtro actualizado
@@ -74,7 +74,7 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
+			conn?.Open();
 			this.SetSqlConnection(conn);
 			// Establece los filtros de datos de la entidad
 			if (filterData!.Count == 0)
@@ -96,7 +96,7 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
+			conn?.Open();
 			//var transaction = conn.BeginTransaction();
 			this.SetSqlConnection(conn);
 			//this.SetTransaction(transaction);
@@ -113,7 +113,7 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
+			conn?.Open();
 			//var transaction = conn.BeginTransaction();
 			this.SetSqlConnection(conn);
 			//this.SetTransaction(transaction);
@@ -134,8 +134,8 @@ public abstract class EntityClass : TransactionalClass
 					property.SetValue(newInstance, value);
 				}
 				// Obtener el método TakeList y llamarlo con la nueva instancia
-				var method = typeof(WDataMapper).GetMethod("TakeList").MakeGenericMethod(entityType);
-				var data = method.Invoke(MDataMapper, new object[] { newInstance, true }) as IList;
+				var method = typeof(WDataMapper).GetMethod("TakeList")?.MakeGenericMethod(entityType);
+				var data = method?.Invoke(MDataMapper, [newInstance, true]) as IList;
 				// Retornar verdadero si se encuentran datos, falso si no se encuentran
 				return data?.Count > 0;
 			}
@@ -150,7 +150,7 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
+			conn?.Open();
 			//var transaction = conn.BeginTransaction();
 			this.SetSqlConnection(conn);
 			//this.SetTransaction(transaction);
@@ -166,8 +166,8 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
-			var transaction = conn.BeginTransaction();
+			conn?.Open();
+			var transaction = conn?.BeginTransaction();
 			SetSqlConnection(conn);
 			SetTransaction(transaction);
 			try
@@ -176,10 +176,10 @@ public abstract class EntityClass : TransactionalClass
 				transaction?.Commit();
 				return result;
 			}
-			catch (System.Exception e)
+			catch (Exception e)
 			{
 				transaction?.Rollback();
-				conn.Dispose();
+				conn?.Dispose();
 				LoggerServices.AddMessageError("ERROR: Save entity", e);
 				throw;
 			}
@@ -192,8 +192,8 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
-			var transaction = conn.BeginTransaction();
+			conn?.Open();
+			var transaction = conn?.BeginTransaction();
 			this.SetSqlConnection(conn);
 			this.SetTransaction(transaction);
 			try
@@ -221,7 +221,7 @@ public abstract class EntityClass : TransactionalClass
 				transaction?.Rollback();
 				// Registra cualquier error que ocurra durante la actualización
 				LoggerServices.AddMessageError("ERROR: Update entity", e);
-				conn.Dispose();
+				conn?.Dispose();
 				return new ResponseService()
 				{
 					status = 500,
@@ -235,8 +235,8 @@ public abstract class EntityClass : TransactionalClass
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			conn.Open();
-			var transaction = conn.BeginTransaction();
+			conn?.Open();
+			var transaction = conn?.BeginTransaction();
 			this.SetSqlConnection(conn);
 			this.SetTransaction(transaction);
 			try
@@ -251,7 +251,7 @@ public abstract class EntityClass : TransactionalClass
 				transaction?.Rollback();
 				// Registra cualquier error que ocurra durante la actualización
 				LoggerServices.AddMessageError("ERROR: Update entity", e);
-				conn.Dispose();
+				conn?.Dispose();
 				return false;
 			}
 		}
@@ -285,8 +285,8 @@ public abstract class EntityClass : TransactionalClass
 	public bool Delete()
 	{
 		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-		conn.Open();
-		var transaction = conn.BeginTransaction();
+		conn?.Open();
+		var transaction = conn?.BeginTransaction();
 		this.SetSqlConnection(conn);
 		this.SetTransaction(transaction);
 		try
@@ -294,13 +294,13 @@ public abstract class EntityClass : TransactionalClass
 			// Elimina la entidad de la base de datos
 			MDataMapper?.Delete(this);
 			// Confirma la transacción
-			transaction.Commit();
+			transaction?.Commit();
 			// Retorna verdadero para indicar que la operación fue exitosa
 			return true;
 		}
 		catch (Exception e)
 		{
-			transaction.Rollback();
+			transaction?.Rollback();
 			LoggerServices.AddMessageError("ERROR: Update entity Delete", e);
 			throw;
 		}
@@ -321,7 +321,7 @@ public abstract class EntityClass : TransactionalClass
 
 		filterData.AddRange(where_condition.ToList());
 		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-		conn.Open();
+		conn?.Open();
 		this.SetSqlConnection(conn);
 		// Se obtienen los datos utilizando el filtro actualizado
 		var Count = MDataMapper?.Count(this);
@@ -340,25 +340,25 @@ public abstract class EntityClass : TransactionalClass
 				&& (c.Values == null || c.Values?.Count == 0)).ToList().Count > 0;
 	}
 
-	// Método para describir la estructura de la entidad utilizando un tipo de enumeración de SQL
+	// Método para describir la estructura de la entidad utilizando un tipo de enumeración de SQL 
 	public List<EntityProps> DescribeEntity(SqlEnumType sqlEnumType)
 	{
 		// Determina la consulta de descripción de entidad según el tipo de SQL
-		List<EntityProps> entityProps = MDataMapper?.DescribeEntity(this);
+		List<EntityProps>? entityProps = MDataMapper?.DescribeEntity(this);
 		// Si no se encuentra ninguna descripción, lanza una excepción
-		if (entityProps.Count == 0)
+		if (entityProps?.Count == 0)
 		{
 			throw new Exception("La entidad buscada no existe: " + this.GetType().Name);
 		}
 		// Retorna la lista de propiedades de entidad obtenidas
-		return entityProps;
+		return entityProps ?? [];
 	}
 
 	public ResponseService SetPropertyNull(params string[] properties)
 	{
 		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-		conn.Open();
-		var transaction = conn.BeginTransaction();
+		conn?.Open();
+		var transaction = conn?.BeginTransaction();
 		this.SetSqlConnection(conn);
 		this.SetTransaction(transaction);
 		try
