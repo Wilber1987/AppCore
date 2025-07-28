@@ -163,6 +163,13 @@ namespace APPCORE.Security
 			}
 			else
 			{
+				if (new Security_Users().Find<Security_Users>(
+					FilterData.Distinc("Id_User", this.Id_User),
+					FilterData.Equal("Mail", this.Mail)
+				) != null)
+				{
+					throw new Exception("Correo en uso");
+				}
 				if (this.Estado == null)
 				{
 					this.Estado = "ACTIVO";
@@ -227,7 +234,7 @@ namespace APPCORE.Security
 			Id_User = security_User?.Id_User;
 			return Update();
 		}
-		
+
 		internal object RecoveryPassword(MailConfig? config, string? passwordE = null)
 		{
 			Security_Users? user = this.Find<Security_Users>();
