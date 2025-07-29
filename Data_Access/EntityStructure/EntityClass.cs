@@ -243,6 +243,7 @@ public abstract class EntityClass : TransactionalClass
 			{
 				// Actualiza la entidad en la base de datos utilizando el identificador proporcionado
 				MDataMapper?.UpdateObject(this, Id);
+				transaction?.Commit();
 				// Retorna verdadero para indicar que la operación fue exitosa
 				return true;
 			}
