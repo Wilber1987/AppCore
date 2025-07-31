@@ -7,7 +7,7 @@ namespace API.Controllers
 	public class AuthNetCore
 	{
 		static public bool AuthAttribute = false;
-		static public bool Authenticate(string idetify)
+		static public bool Authenticate(string? idetify)
 		{
 			var security_User = SessionServices.Get<Security_Users>("loginIn", idetify);
 			if (SqlADOConexion.SQLM == null || security_User == null)
@@ -134,13 +134,13 @@ namespace API.Controllers
 
 				return new UserModel()
 				{
-					UserId = security_User.Id_User,
-					mail = security_User.Mail,
+					UserId = security_User?.Id_User,
+					mail = security_User?.Mail,
 					UserData = security_User,
 					password = "PROTECTED",
 					status = 200,
 					success = true,
-					isAdmin = security_User.IsAdmin(),
+					isAdmin = security_User?.IsAdmin() ?? false,
 					message = "Inicio de sesión exitoso.",
 					permissions = list
 				};
@@ -202,7 +202,7 @@ namespace API.Controllers
 				return false;
 			}
 		}
-		public static bool HavePermission(string permission, string sessionKey)
+		public static bool HavePermission(string? permission, string? sessionKey)
 		{
 			var security_User = User(sessionKey).UserData;
 			var isAdmin = security_User?.Security_Users_Roles?.Where(r => RoleHavePermission(Permissions.ADMIN_ACCESS.ToString(), r)?.Count != 0).ToList();
@@ -218,7 +218,7 @@ namespace API.Controllers
 				return false;
 			}
 		}
-		private static List<Security_Permissions_Roles>? RoleHavePermission(string permission, Security_Users_Roles? r)
+		private static List<Security_Permissions_Roles>? RoleHavePermission(string? permission, Security_Users_Roles? r)
 		{
 			return r?.Security_Role?.Security_Permissions_Roles?.Where(p => p.Security_Permissions?.Descripcion == permission).ToList();
 		}

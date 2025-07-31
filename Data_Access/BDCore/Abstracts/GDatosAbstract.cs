@@ -104,7 +104,6 @@ namespace APPCORE
 				}
 			}
 		}
-
 		public void RollBackGlobalTransaction()
 		{
 			if (this.MTransaccion != null)
@@ -114,10 +113,7 @@ namespace APPCORE
 				this.globalTransaction = false;
 			}
 		}
-
 		#region ADO.NET METHODS
-
-
 		/**
 		* Método para probar la conexión a la base de datos.
 		* Devuelve verdadero si la conexión es exitosa, de lo contrario, lanza una excepción.
