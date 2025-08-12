@@ -55,12 +55,12 @@ public abstract class TransactionalClass
 	}
 	
 
-	internal void SetTransaction(IDbTransaction transaction)
+	internal void SetTransaction(IDbTransaction? transaction)
 	{
 		Transaction = transaction;
 	}
 
-	internal void SetSqlConnection(IDbConnection connection)
+	internal void SetSqlConnection(IDbConnection? connection)
 	{
 		SqlConection = connection;
 	}
