@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using APPCORE.Services;
 using Microsoft.Extensions.Configuration;
 namespace APPCORE.SystemConfig
 {
 	public abstract class SystemConfig
 	{
+		public static bool isDebug = false;
 		public string TITULO = "TEMPLATE";
 		public string SUB_TITULO = "Template";
 		public string NOMBRE_EMPRESA = "TEMPLATE";
