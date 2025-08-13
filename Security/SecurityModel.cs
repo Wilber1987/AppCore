@@ -133,16 +133,16 @@ namespace APPCORE.Security
 
 		public object DoSaveUser(Tbl_Profile? tbl_Profile)
 		{
-			Security_Users? userF = null;
+			Security_Users? thisUser = null;
 			if (Id_User != null)
 			{
-				userF = new Security_Users { Id_User = Id_User }.Find<Security_Users>();
+				thisUser = new Security_Users { Id_User = Id_User }.Find<Security_Users>();
 			}
 
 			if (this.Password != null)
 			{
 				this.Password = EncrypterServices.Encrypt(this.Password);
-				if (userF != null && userF.Password_Expiration_Date != null)
+				if (thisUser != null && thisUser.Password_Expiration_Date != null)
 				{
 					this.Password_Expiration_Date = DateTime.Now.AddDays(30);
 				}
@@ -162,10 +162,10 @@ namespace APPCORE.Security
 
 			}
 			else
-			{
+			{				
 				if (new Security_Users().Find<Security_Users>(
 					FilterData.Distinc("Id_User", this.Id_User),
-					FilterData.Equal("Mail", this.Mail)
+					FilterData.Equal("Mail", thisUser?.Mail)
 				) != null)
 				{
 					throw new Exception("Correo en uso");
