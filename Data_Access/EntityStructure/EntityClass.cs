@@ -86,7 +86,7 @@ public abstract class EntityClass : TransactionalClass
 				filterData.AddRange(where_condition?.ToList() ?? []);
 			}
 			// Intenta obtener la entidad utilizando los filtros establecidos
-			var Data = SqlADOConexion.SQLM != null ? SqlADOConexion.SQLM.TakeObject<T>(this) : default(T);
+			var Data = MDataMapper != null ? MDataMapper.TakeObject<T>(this) : default(T);
 			// Retorna la entidad encontrada o null si no se encuentra
 			return Data;
 		}
@@ -103,7 +103,7 @@ public abstract class EntityClass : TransactionalClass
 			// Establece los filtros de datos de la entidad
 			filterData = where_condition?.ToList();
 			// Intenta obtener la entidad utilizando los filtros establecidos
-			var Data = SqlADOConexion.SQLM != null ? SqlADOConexion.SQLM.TakeObject<T>(this, "", true) : default(T);
+			var Data = MDataMapper != null ? MDataMapper.TakeObject<T>(this, "", true) : default(T);
 			// Retorna la entidad encontrada o null si no se encuentra
 			return Data;
 		}
