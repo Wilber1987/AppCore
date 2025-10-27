@@ -22,7 +22,7 @@ namespace APPCORE.BDCore.Abstracts
 
 		#region ORM INSERT, DELETE, UPDATES METHODS
 
-		public object? InsertObject(EntityClass entity)
+		public object? InsertObject(EntityClass entity, bool fullInsert = true)
 		{
 			// Agrega un mensaje de registro indicando que se está insertando un objeto en la base de datos
 
@@ -34,9 +34,13 @@ namespace APPCORE.BDCore.Abstracts
 
 			// Filtra las propiedades que tienen el atributo [ManyToOne]
 			List<PropertyInfo> manyToOneProperties = entityProps.Where(p => Attribute.GetCustomAttribute(p, typeof(ManyToOne)) != null).ToList();
+			if (fullInsert)
+			{
+				// Establece los valores de las claves externas para las relaciones ManyToOne
+				SetManyToOneProperties(entity, manyToOneProperties);
+			}
 
-			// Establece los valores de las claves externas para las relaciones ManyToOne
-			SetManyToOneProperties(entity, manyToOneProperties);
+			
 
 
 			// Construye la consulta de inserción y los parámetros correspondientes
@@ -59,6 +63,10 @@ namespace APPCORE.BDCore.Abstracts
 					Type? pkType = Nullable.GetUnderlyingType(primaryKeyProperties[0].PropertyType);
 					primaryKeyProperties[0].SetValue(entity, Convert.ChangeType(idGenerated, pkType));
 				}
+			}
+			if (!fullInsert)
+			{
+				return entity;
 			}
 
 			// Filtra las propiedades que tienen el atributo [OneToOne]

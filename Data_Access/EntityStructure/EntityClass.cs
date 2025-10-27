@@ -162,7 +162,7 @@ public abstract class EntityClass : TransactionalClass
 	}
 
 	// Método para guardar una entidad en la base de datos
-	public object? Save()
+	public object? Save(bool fullInsert = true)
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
@@ -172,7 +172,7 @@ public abstract class EntityClass : TransactionalClass
 			SetTransaction(transaction);
 			try
 			{
-				var result = MDataMapper?.InsertObject(this);
+				var result = MDataMapper?.InsertObject(this, fullInsert);
 				transaction?.Commit();
 				return result;
 			}
@@ -186,6 +186,7 @@ public abstract class EntityClass : TransactionalClass
 		}
 
 	}
+	
 
 	// Método para actualizar una entidad en la base de datos
 	public ResponseService Update()
