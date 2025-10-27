@@ -86,7 +86,7 @@ public abstract class EntityClass : TransactionalClass
 				filterData.AddRange(where_condition?.ToList() ?? []);
 			}
 			// Intenta obtener la entidad utilizando los filtros establecidos
-			var Data = SqlADOConexion.SQLM != null ? SqlADOConexion.SQLM.TakeObject<T>(this) : default(T);
+			var Data = MDataMapper != null ? MDataMapper.TakeObject<T>(this) : default(T);
 			// Retorna la entidad encontrada o null si no se encuentra
 			return Data;
 		}
@@ -103,7 +103,7 @@ public abstract class EntityClass : TransactionalClass
 			// Establece los filtros de datos de la entidad
 			filterData = where_condition?.ToList();
 			// Intenta obtener la entidad utilizando los filtros establecidos
-			var Data = SqlADOConexion.SQLM != null ? SqlADOConexion.SQLM.TakeObject<T>(this, "", true) : default(T);
+			var Data = MDataMapper != null ? MDataMapper.TakeObject<T>(this, "", true) : default(T);
 			// Retorna la entidad encontrada o null si no se encuentra
 			return Data;
 		}
@@ -125,17 +125,10 @@ public abstract class EntityClass : TransactionalClass
 			var values = pkProperties.Where(p => p.GetValue(this) != null).ToList();
 			// Si el número de propiedades de clave primaria coincide con las que tienen valores, realiza la actualización
 			if (pkProperties.Count == values.Count)
-			{
-				var newInstance = Activator.CreateInstance(entityType);
-				// Establecer los valores de clave primaria en la nueva instancia
-				foreach (var property in pkProperties)
-				{
-					var value = property.GetValue(this);
-					property.SetValue(newInstance, value);
-				}
+			{				
 				// Obtener el método TakeList y llamarlo con la nueva instancia
 				var method = typeof(WDataMapper).GetMethod("TakeList")?.MakeGenericMethod(entityType);
-				var data = method?.Invoke(MDataMapper, [newInstance, true]) as IList;
+				var data = method?.Invoke(MDataMapper, [this, "", true]) as IList;
 				// Retornar verdadero si se encuentran datos, falso si no se encuentran
 				return data?.Count > 0;
 			}

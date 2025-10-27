@@ -9,6 +9,16 @@ namespace APPCORE
 		public string? FilterType { get; set; }
 		public List<FilterData>? Filters { get; set; }
 		public List<String?>? Values { get; set; }
+		
+		public static FilterData In<T>(string? propName, params T[] values)
+		{
+			return new FilterData
+			{
+				PropName = propName,
+				FilterType = "in",
+				Values = values.Select(v => v?.ToString()).ToList()
+			};
+		}
 		public static FilterData In(string? propName, params object?[] values)
 		{
 			return new FilterData { PropName = propName, FilterType = "in", Values = values.Select(v => v?.ToString()).ToList() };
