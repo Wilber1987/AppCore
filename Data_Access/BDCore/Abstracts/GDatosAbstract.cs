@@ -76,6 +76,10 @@ namespace APPCORE
 		
 		public void BeginGlobalTransaction()
 		{
+			if (this.GetSqlType == SqlEnumType.MYSQL)
+			{
+				return;
+			}
 			if (this.globalTransaction) { 
 				throw new InvalidOperationException("No se puede iniciar una segunda global transaction sin antes haber finalizado la anterior");				
 			}
@@ -85,6 +89,10 @@ namespace APPCORE
 		}
 		public void CommitGlobalTransaction()
 		{
+			if (this.GetSqlType == SqlEnumType.MYSQL)
+			{
+				return;
+			}
 			if (this.MTransaccion != null)
 			{
 				try
@@ -106,6 +114,10 @@ namespace APPCORE
 		}
 		public void RollBackGlobalTransaction()
 		{
+			if (this.GetSqlType == SqlEnumType.MYSQL)
+			{
+				return;
+			}
 			if (this.MTransaccion != null)
 			{
 

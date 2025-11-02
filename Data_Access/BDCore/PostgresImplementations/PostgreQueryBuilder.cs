@@ -250,7 +250,7 @@ namespace APPCORE.PostgresImplementations
 					break;
 				case "date":
 					sqlDbType = NpgsqlDbType.Date;
-					break;
+					break;				
 				default:
 					// Lanzar una excepción si el tipo de datos no es compatible
 					throw new ArgumentException($"Tipo de datos no soportado: {dataType}");
