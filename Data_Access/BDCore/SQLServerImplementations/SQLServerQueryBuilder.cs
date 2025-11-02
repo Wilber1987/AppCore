@@ -215,7 +215,7 @@ namespace APPCORE.BDCore.Implementations
 			// Determinar el tipo de datos SQL correspondiente al tipo de datos proporcionado
 			SqlDbType sqlDbType;
 			bool isString = false;
-			switch (dataType)
+			switch (dataType?.ToLowerInvariant())
 			{
 				case "nvarchar":
 				case "varchar":
@@ -244,6 +244,9 @@ namespace APPCORE.BDCore.Implementations
 				case "date":
 					sqlDbType = SqlDbType.DateTime;
 					break;
+				case "time":
+				sqlDbType = SqlDbType.Time;
+				break;
 				default:
 					//Lanzar una excepción si el tipo de datos no es compatible
 					throw new ArgumentException($"Tipo de datos no soportado: {dataType}");
