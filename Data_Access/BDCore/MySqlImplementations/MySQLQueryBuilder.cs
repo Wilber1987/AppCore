@@ -92,14 +92,14 @@ namespace APPCORE.BDCore.MySqlImplementations
 
 			// Construir la consulta SELECT principal
 			string queryString = $"SELECT {Columns} FROM {entityProps[0].TABLE_SCHEMA}.{Inst?.GetType().Name.ToLower()} as {tableAlias} " +
-								$" {CondicionString} {CondSQL} {(filterLimit != null ? $" limit {filterLimit?.Values?[0]}" : "")} {(filterPaginated != null ? $" OFFSET {filterPaginated?.Values?[0]}" : "")}";
-
+								$" {CondicionString} {CondSQL} ";
+			//{(filterLimit != null ? $" limit {filterLimit?.Values?[0]}" : "")} {(filterPaginated != null ? $" OFFSET {filterPaginated?.Values?[0]}" : "")}
 			// Obtener la propiedad de clave principal
 			PropertyInfo? primaryKeyPropierty = Inst?.GetType()?.GetProperties()?.ToList()?.Where(p => Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).FirstOrDefault();
 
 			// Obtener las órdenes de filtro
 			queryString = SetOrderByData(Inst, primaryKeyPropierty, queryString);
-
+			queryString += $" {(filterLimit != null ? $" limit {filterLimit?.Values?[0]}" : "")} {(filterPaginated != null ? $" OFFSET {filterPaginated?.Values?[0]}" : "")}";
 			// Construir la consulta COUNT para obtener el total de registros
 			string queryStringCount = $" SELECT count(*) FROM {entityProps[0].TABLE_SCHEMA}.{Inst?.GetType().Name.ToLower()} as {tableAlias} {CondicionString} {CondSQL};";
 
