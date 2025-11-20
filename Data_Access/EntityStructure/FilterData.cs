@@ -9,7 +9,7 @@ namespace APPCORE
 		public string? FilterType { get; set; }
 		public List<FilterData>? Filters { get; set; }
 		public List<String?>? Values { get; set; }
-		
+
 		public static FilterData In<T>(string? propName, params T[] values)
 		{
 			return new FilterData
@@ -176,9 +176,32 @@ namespace APPCORE
 		{
 			return new FilterData { FilterType = "limit", Values = new List<string?> { value.ToString() } };
 		}
-
-		public static FilterData JsonPropEqual(string? propName, string? jsonPropName, object? value, string? type)
+		/// <summary>
+		/// Crea una instancia de <see cref="FilterData"/> para aplicar un filtro de tipo igualdad 
+		/// entre una propiedad del modelo y una propiedad en un JSON almacenado en base de datos.
+		/// </summary>
+		/// <param name="propName">Nombre de la propiedad en la entidad o clase del modelo.</param>
+		/// <param name="jsonPropName">Nombre de la propiedad dentro del objeto JSON que se desea comparar.</param>
+		/// <param name="value">Valor a comparar contra la propiedad del JSON.</param>
+		/// <param name="type">Tipo SQL de la propiedad (por ejemplo: "INT", "VARCHAR", "DATE").</param>
+		/// <returns>
+		/// Una nueva instancia de <see cref="FilterData"/> configurada para realizar un filtro de igualdad 
+		/// basado en una propiedad contenida en un campo JSON.
+		/// </returns>
+		public static FilterData JsonPropEqual(string? propName, string? jsonPropName, object? value, string? type = null)
 		{
+			// Si no viene tipo, intentamos inferirlo del objeto
+			if (type == null && value != null)
+			{
+				type = value switch
+				{
+					int or long => "INT",
+					double or float or decimal => "DECIMAL",
+					bool => "BIT",
+					DateTime => "DATETIME",
+					_ => "NVARCHAR" // Default si no se reconoce el tipo
+				};
+			}
 			return new FilterData
 			{
 				PropName = propName,
