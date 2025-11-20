@@ -304,12 +304,16 @@ namespace APPCORE.Security
 				}
 				catch (System.Exception)
 				{
-
 					throw;
 				}
 			}
 		}
-	}
+
+        public ResponseService UpdatePermision()
+        {
+            return new Security_Permissions{ Id_Permission= this.Id_Permission,  Detalles = this.Detalles }.Update();
+        }
+    }
 	public class Security_Permissions_Roles : EntityClass
 	{
 		[PrimaryKey(Identity = false)]

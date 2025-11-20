@@ -2,7 +2,7 @@ using API.Controllers;
 using APPCORE;
 namespace APPCORE.SystemConfig
 {
-	public class  Transactional_Configuraciones : EntityClass
+	public class Transactional_Configuraciones : EntityClass
 	{
 		[PrimaryKey(Identity = true)]
 		public int? Id_Configuracion { get; set; }
@@ -15,18 +15,20 @@ namespace APPCORE.SystemConfig
 			Nombre = prop;
 			return Find<Transactional_Configuraciones>();
 		}
-		public  Transactional_Configuraciones? GetParam(ConfiguracionesThemeEnum prop, string defaultValor = "", ConfiguracionesTypeEnum TYPE = ConfiguracionesTypeEnum.THEME)
+		public Transactional_Configuraciones? GetParam(ConfiguracionesThemeEnum prop,
+			string defaultValor = "",
+		 	ConfiguracionesTypeEnum TYPE = ConfiguracionesTypeEnum.THEME)
 		{
 			Nombre = prop.ToString();
 
 			var find = Find<Transactional_Configuraciones>();
 			if (find == null)
 			{
-				
+
 				Valor = defaultValor;
 				Descripcion = prop.ToString();
 				Nombre = prop.ToString();
-				Tipo_Configuracion = TYPE.ToString();				
+				Tipo_Configuracion = TYPE.ToString();
 				find = (Transactional_Configuraciones?)Save();
 			}
 			return find;
@@ -66,6 +68,11 @@ namespace APPCORE.SystemConfig
 				FilterData.Equal("Nombre", ConfiguracionesThemeEnum.PARAM_NUMBER_TEMPLATE)
 			)?.Valor ?? "0");
 		}
+
+		public int GetParamnNumberNotificationTemplate()
+		{
+			return Convert.ToInt32(GetParam(ConfiguracionesThemeEnum.PARAM_NUMBER_NOTIFICATION_TEMPLATE, "1"));
+		}
 	}
 	public enum AppConfigurationList
 	{
@@ -81,22 +88,23 @@ namespace APPCORE.SystemConfig
 	public enum ConfiguracionesTypeEnum
 	{
 		THEME, GENERAL_DATA, NUMBER, SELECT,
-        IMAGE
-    }
-    
+		IMAGE
+	}
+
 
 	public enum ConfiguracionesThemeEnum
 	{
 		TITULO, SUB_TITULO, NOMBRE_EMPRESA, LOGO_PRINCIPAL, LOGO, MEDIA_IMG_PATH,
 		VERSION, PARAM_NUMBER_TEMPLATE, MESSAGE_TEMPLATE, AUTOMATIC_SENDER_REPORT,
-        DESTINATARIOS_AUTOMATIC_SENDER_REPORT,
-        MEMBRETE_HEADER,
-        MEMBRETE_FOOTHER,
-        DOMAIN_URL,
-        //ESTAS SE ESTAN USANDO PARA PLANTILLAS DE MENSAJES DE META API
-        TEMPLATE_NAME,
-        TEMPLATE_IMAGE_HEADER,
-        BLACK_LIST
-    }
-	
+		DESTINATARIOS_AUTOMATIC_SENDER_REPORT,
+		MEMBRETE_HEADER,
+		MEMBRETE_FOOTHER,
+		DOMAIN_URL,
+		//ESTAS SE ESTAN USANDO PARA PLANTILLAS DE MENSAJES DE META API
+		TEMPLATE_NAME,
+		TEMPLATE_IMAGE_HEADER,
+		BLACK_LIST,
+		PARAM_NUMBER_NOTIFICATION_TEMPLATE
+	}
+
 }
