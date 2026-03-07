@@ -41,7 +41,8 @@ namespace API.Controllers
 				var security_User = new Security_Users()
 				{
 					Mail = mail,
-					Password = EncrypterServices.Encrypt(password)
+					Password = EncrypterServices.Encrypt(password),
+					Estado = "ACTIVO"
 				}.GetUserData();
 				if (security_User == null) ClearSeason(idetify);
 				if (security_User?.Password_Expiration_Date != null && security_User?.Password_Expiration_Date < DateTime.Now)

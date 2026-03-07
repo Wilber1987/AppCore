@@ -64,15 +64,21 @@ namespace AppCore.Services
 		{
 			return !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.IndexOf("@") > 0 && email.IndexOf("@") < email.Length - 1;
 		}
-		public static List<string> GetNombres(string cadena)
+		
+		public static List<string?> GetNombres(string cadena)
 		{
-			var nombres = cadena.Split(' ').ToList();
-			if (nombres.Count < 2)
-			{
-				nombres.Add(null);
-			}
+			if (string.IsNullOrWhiteSpace(cadena))
+				return new List<string?> { null, null };
 
-			return nombres;
+			cadena = cadena.Trim();
+			var partes = cadena.Split(' ');
+
+			var primer = partes[0];
+			string? segundo = partes.Length > 1
+				? string.Join(" ", partes.Skip(1))
+				: null;
+
+			return new List<string?> { primer, segundo };
 		}
 		public static string GenerateRandomPassword(int length = 8)
 		{
