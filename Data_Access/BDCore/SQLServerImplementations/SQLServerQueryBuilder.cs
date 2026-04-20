@@ -232,8 +232,10 @@ namespace APPCORE.BDCore.Implementations
 				case "money":
 					sqlDbType = SqlDbType.Money;
 					break;
-				case "int":
 				case "bigint":
+					sqlDbType = SqlDbType.BigInt;
+					break;
+				case "int":
 				case "smallint":
 					sqlDbType = SqlDbType.Int;
 					break;

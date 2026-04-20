@@ -105,29 +105,29 @@ namespace APPCORE.Security
 			{
 				throw new Exception("no tiene permisos");
 			}
-			Save_User(new Tbl_Profile()
+			var response = Save_User(new Tbl_Profile()
 			{
 				Nombres = this.Nombres,
 				Estado = this.Estado,
 				Correo_institucional = this.Mail,
 				Foto = "\\Media\\profiles\\avatar.png"
-			});
-			return new ResponseService(200, "Actualización exitosa");
+			}) as ResponseService;
+			
+			return response;
 		}
+
+		
 
 		public object Save_User(Tbl_Profile? tbl_Profile)
 		{
 			try
 			{
 				//this.BeginGlobalTransaction();
-				DoSaveUser(tbl_Profile);
-				//this.CommitGlobalTransaction();
-				return this;
+				return DoSaveUser(tbl_Profile);				
 			}
-			catch (System.Exception)
+			catch (Exception ex)
 			{
-				//this.RollBackGlobalTransaction();
-				throw;
+				return new ResponseService(400, ex.Message);
 			}
 		}
 
@@ -165,10 +165,10 @@ namespace APPCORE.Security
 			{				
 				if (new Security_Users().Find<Security_Users>(
 					FilterData.Distinc("Id_User", this.Id_User),
-					FilterData.Equal("Mail", thisUser?.Mail)
+					FilterData.Equal("Mail", this.Mail)
 				) != null)
 				{
-					throw new Exception("Correo en uso");
+					throw new Exception("Este correo esta en uso por otro usuario");
 				}
 				if (this.Estado == null)
 				{
@@ -187,7 +187,7 @@ namespace APPCORE.Security
 					obj.Save();
 				}
 			}
-			return this;
+			return new ResponseService(200,"Datos guardados");
 		}
 
 		public object GetUsers()
