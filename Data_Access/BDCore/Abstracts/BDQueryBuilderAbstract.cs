@@ -182,7 +182,6 @@ namespace APPCORE.BDCore.Abstracts
 		}
 		public (string?, List<IDbDataParameter>?) BuildDeleteQuery(EntityClass Inst)
 		{
-			//TODO VALIDAR BIEN, validar filterdata y OrderData!!
 			string TableName = Inst.GetType().Name.ToLower();
 			string CondicionString = "";
 			Type _type = Inst.GetType();
@@ -203,7 +202,8 @@ namespace APPCORE.BDCore.Abstracts
 
 			}
 			CondicionString = CondicionString.TrimEnd(new char[] { '0', 'R' });
-			string strQuery = "DELETE FROM  " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + CondicionString;
+			//string strQuery = "DELETE FROM  " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + CondicionString;
+			string strQuery = "UPDATE " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + " SET IsDeleted = 1 "  + CondicionString ;
 			//LoggerServices.AddMessageInfo(strQuery);
 			return (strQuery, parameters);
 		}
