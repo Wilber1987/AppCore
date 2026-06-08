@@ -21,7 +21,7 @@ ProjectAssetsFile=<PATH>obj/project.assets.json
 RootNamespace=AppCore
 RunAnalyzers=
 RunAnalyzersDuringLiveAnalysis=
-SolutionPath=<PATH>../ETLService.sln
+SolutionPath=<PATH>../MAIN_PROYECT.sln
 TargetFrameworkIdentifier=.NETCoreApp
 TargetPath=<PATH>bin/Debug/net8.0/AppCore.dll
 TargetRefPath=<PATH>obj/Debug/net8.0/ref/AppCore.dll
@@ -525,5 +525,9 @@ SystemConfig/
  Microsoft.CodeAnalysis.CSharp.Analyzers.dll
 
 [analyzerConfigFiles]
+<<<<<<< HEAD
+=======
+../.editorconfig
+>>>>>>> 1e558da247725edf757f4dd5e122b2bf3e6532f0
 <DOTNET>/sdk/8.0.414/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_8_default.globalconfig
 obj/Debug/net8.0/AppCore.GeneratedMSBuildEditorConfig.editorconfig

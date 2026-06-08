@@ -201,7 +201,7 @@ namespace APPCORE.Services
 				}
 				
 				correo.Subject = subject; //Asunto
-				correo.Body = from + ": " + body;//ContractService.RenderTemplate(templatePage, model);
+				correo.Body = from + " " + body;//ContractService.RenderTemplate(templatePage, model);
 				correo.IsBodyHtml = true;
 				correo.Priority = MailPriority.Normal;
 				if (uid != null)

@@ -17,6 +17,18 @@ public static class NumberUtility
 			: Math.Round((decimal)numberAsString, 2).ToString(), false, currency);
 
 	}
+	public static string NumeroALetras(decimal? numberAsString, bool isMoney = true, string currency = "")
+	{
+		//creamos el objeto
+		Moneda oMoneda = new Moneda();
+		//primer parametro es la cantidad en string
+		//segundo parametro es si queremos que sea mayuscula
+		//tercer parametro la moneda
+		return oMoneda.Convertir(isMoney
+			? Math.Round((decimal)numberAsString, 2).ToString("0.00")
+			: Math.Round((decimal)numberAsString, 2).ToString(), false, currency);
+
+	}
 	public static string NumeroALetras(this decimal numberAsString)
 	{
 		string dec = "";
@@ -111,42 +123,45 @@ public static class NumberUtility
 		}
 		return num2Text;
 	}
-	public static String ConvertToMoneyString(double? cuotafija)
+	public static string ConvertToMoneyString(double? cuotafija)
 	{
-		//CultureInfo cultura = new CultureInfo("es-ES"); 
-		//return cuotafija.GetValueOrDefault().ToString("#,##0.00", cultura); 
+		return cuotafija.GetValueOrDefault().ToString("#,##0.00", CultureInfo.GetCultureInfo("es-ES"))
+			.Replace(",", "|").Replace(".", ",").Replace("|", "."); ;
+	}
+	public static string ConvertToMoneyString(decimal? cuotafija)
+	{
 		return cuotafija.GetValueOrDefault().ToString("#,##0.00", CultureInfo.GetCultureInfo("es-ES"))
 			.Replace(",", "|").Replace(".", ",").Replace("|", "."); ;
 	}
 	public static string ObtenerEnumeracion(int numero)
-    {
+	{
 		if (numero == 0)
 		{
 			numero = 1;
 		}
-        if (numero < 1 || numero > 30)
-            throw new ArgumentOutOfRangeException("El número debe estar entre 1 y 30");
+		if (numero < 1 || numero > 30)
+			throw new ArgumentOutOfRangeException("El número debe estar entre 1 y 30");
 
-        string[] unidades = { "primer", "segundo", "tercer", "cuarto", "quinto", "sexto", "séptimo", "octavo", "noveno", "décimo" };
-        string[] decenas = { "décimo", "vigésimo", "trigésimo" };
+		string[] unidades = { "primer", "segundo", "tercer", "cuarto", "quinto", "sexto", "séptimo", "octavo", "noveno", "décimo" };
+		string[] decenas = { "décimo", "vigésimo", "trigésimo" };
 
-        if (numero <= 10)
-        {
-            return unidades[numero - 1];
-        }
-        else if (numero <= 20)
-        {
-            return "décimo " + unidades[numero - 11];
-        }
-        else if (numero <= 30)
-        {
-            return "vigésimo " + unidades[numero - 21];
-        }
+		if (numero <= 10)
+		{
+			return unidades[numero - 1];
+		}
+		else if (numero <= 20)
+		{
+			return "décimo " + unidades[numero - 11];
+		}
+		else if (numero <= 30)
+		{
+			return "vigésimo " + unidades[numero - 21];
+		}
 
-        // Solo hasta el número 30, así que no es necesario manejar más casos.
-        return string.Empty;
-    }
-    public static string ToRoman(int num)
+		// Solo hasta el número 30, así que no es necesario manejar más casos.
+		return string.Empty;
+	}
+	public static string ToRoman(int num)
 	{
 		string[] roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 		return roman[num - 1];
