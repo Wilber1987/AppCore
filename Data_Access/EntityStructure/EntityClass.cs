@@ -10,7 +10,7 @@ public abstract class EntityClass : TransactionalClass
 {
 	private List<FilterData>? filters;
 	// Lista de filtros de datos que pueden aplicarse a las consultas de la entidad
-	public List<FilterData>? filterData
+	public List<FilterData> filterData
 	{
 		get
 		{
@@ -125,7 +125,7 @@ public abstract class EntityClass : TransactionalClass
 			var values = pkProperties.Where(p => p.GetValue(this) != null).ToList();
 			// Si el número de propiedades de clave primaria coincide con las que tienen valores, realiza la actualización
 			if (pkProperties.Count == values.Count)
-			{				
+			{
 				// Obtener el método TakeList y llamarlo con la nueva instancia
 				var method = typeof(WDataMapper).GetMethod("TakeList")?.MakeGenericMethod(entityType);
 				var data = method?.Invoke(MDataMapper, [this, "", true]) as IList;
@@ -179,7 +179,7 @@ public abstract class EntityClass : TransactionalClass
 		}
 
 	}
-	
+
 
 	// Método para actualizar una entidad en la base de datos
 	public ResponseService Update()
@@ -277,27 +277,31 @@ public abstract class EntityClass : TransactionalClass
 	}
 
 	// Método para eliminar una entidad de la base de datos
-	public bool Delete()
+	public ResponseService Delete()
 	{
-		using var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? "");
-		conn?.Open();
-		var transaction = conn?.BeginTransaction();
-		this.SetSqlConnection(conn);
-		this.SetTransaction(transaction);
-		try
+		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
-			// Elimina la entidad de la base de datos
-			MDataMapper?.Delete(this);
-			// Confirma la transacción
-			transaction?.Commit();
-			// Retorna verdadero para indicar que la operación fue exitosa
-			return true;
-		}
-		catch (Exception e)
-		{
-			transaction?.Rollback();
-			LoggerServices.AddMessageError("ERROR: Update entity Delete", e);
-			throw;
+			conn?.Open();
+			var transaction = conn?.BeginTransaction();
+			SetSqlConnection(conn);
+			SetTransaction(transaction);
+			try
+			{
+				var result = MDataMapper?.Delete(this);
+				transaction?.Commit();
+				return  new ResponseService() { status = 200, message = this.GetType().Name + " Eliminado correctamente" };;
+			}
+			catch (Exception e)
+			{
+				transaction?.Rollback();
+				conn?.Dispose();
+				LoggerServices.AddMessageError("ERROR: Save entity", e);
+				return new ResponseService()
+				{
+					status = 500,
+					message = "Error al eliminar registro: " + e.Message
+				};
+			}
 		}
 	}
 

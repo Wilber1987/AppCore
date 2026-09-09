@@ -525,5 +525,12 @@ SystemConfig/
  Microsoft.CodeAnalysis.CSharp.Analyzers.dll
 
 [analyzerConfigFiles]
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+../.editorconfig
+>>>>>>> 1e558da247725edf757f4dd5e122b2bf3e6532f0
+>>>>>>> 5dbed37161daef67c67d1aef3e876f4c6680dec3
 <DOTNET>/sdk/8.0.414/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_8_default.globalconfig
 obj/Debug/net8.0/AppCore.GeneratedMSBuildEditorConfig.editorconfig

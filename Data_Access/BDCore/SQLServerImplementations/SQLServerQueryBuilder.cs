@@ -22,7 +22,7 @@ namespace APPCORE.BDCore.Implementations
 			EntityClass Inst, string CondSQL, int recursionDepth = 0) // Agregado recursionDepth
 		{
 			// Inicialización de variables para la construcción de la consulta
-			string CondicionString = "";
+			string CondicionString = " Where IsDeleted != 1 ";
 			string Columns = "";
 
 			// Obtener el tipo y las propiedades del objeto de clase de entidad
@@ -232,8 +232,10 @@ namespace APPCORE.BDCore.Implementations
 				case "money":
 					sqlDbType = SqlDbType.Money;
 					break;
-				case "int":
 				case "bigint":
+					sqlDbType = SqlDbType.BigInt;
+					break;
+				case "int":
 				case "smallint":
 					sqlDbType = SqlDbType.Int;
 					break;

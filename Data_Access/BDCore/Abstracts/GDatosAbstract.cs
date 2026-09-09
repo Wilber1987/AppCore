@@ -73,15 +73,16 @@ namespace APPCORE
 		public List<EntityProps>? EntityDescription { get; set; }
 
 		public SqlEnumType GetSqlType { get; set; }
-		
+
 		public void BeginGlobalTransaction()
 		{
 			if (this.GetSqlType == SqlEnumType.MYSQL)
 			{
 				return;
 			}
-			if (this.globalTransaction) { 
-				throw new InvalidOperationException("No se puede iniciar una segunda global transaction sin antes haber finalizado la anterior");				
+			if (this.globalTransaction)
+			{
+				throw new InvalidOperationException("No se puede iniciar una segunda global transaction sin antes haber finalizado la anterior");
 			}
 			MTransaccion = new TransactionScope();
 			this.globalTransaction = true;
@@ -108,7 +109,7 @@ namespace APPCORE
 				finally
 				{
 					MTransaccion.Dispose();
-					this.globalTransaction = false;		
+					this.globalTransaction = false;
 				}
 			}
 		}
@@ -121,7 +122,7 @@ namespace APPCORE
 			if (this.MTransaccion != null)
 			{
 
-				this.MTransaccion = null; 
+				this.MTransaccion = null;
 				this.globalTransaction = false;
 			}
 		}
@@ -138,15 +139,24 @@ namespace APPCORE
 				using (SQLMCon)
 				{
 					SQLMCon.Open();
-					string DescribeEntityQuery = GetSqlType switch
+					string describeEntityQuery = GetSqlType switch
 					{
 						SqlEnumType.SQL_SERVER => SQLServerEntityQuerys.DescribeEntitys,
 						SqlEnumType.POSTGRES_SQL => PostgreEntityQuerys.DescribeEntitys,
 						SqlEnumType.MYSQL => MySqlEntityQuerys.DescribeEntityQuery.Replace("entityDatabase", Database),
 						_ => ""
 					};
+					// Obtener descripción de entidades
 					this.EntityDescription = AdapterUtil.ConvertDataTable<EntityProps>(
-						TraerDatosSQL(DescribeEntityQuery, SQLMCon, null, null),
+						TraerDatosSQL(describeEntityQuery, SQLMCon, null, null),
+						new EntityProps());
+
+					// Crear IsDeleted donde no exista
+					EnsureSoftDeleteColumn(SQLMCon);
+
+					// Recargar descripción después de cambios
+					this.EntityDescription = AdapterUtil.ConvertDataTable<EntityProps>(
+						TraerDatosSQL(describeEntityQuery, SQLMCon, null, null),
 						new EntityProps());
 				}
 				return true;
@@ -155,6 +165,66 @@ namespace APPCORE
 			{
 				LoggerServices.AddMessageError("error conectando a bd", ex);
 				throw;
+			}
+		}
+
+		private void EnsureSoftDeleteColumn(IDbConnection connection)
+		{
+			if (EntityDescription == null || !EntityDescription.Any())
+				return;
+
+			// Agrupar por tabla
+			var tables = EntityDescription
+				.GroupBy(x => new
+				{
+					x.TABLE_SCHEMA,
+					x.TABLE_NAME
+				});
+
+			foreach (var table in tables)
+			{
+				// Verificar si ya existe IsDeleted
+				bool hasIsDeleted = table.Any(c =>
+					c.COLUMN_NAME.Equals("IsDeleted",
+						StringComparison.OrdinalIgnoreCase));
+
+				if (hasIsDeleted)
+					continue;
+
+				string schema = table.Key.TABLE_SCHEMA;
+				string tableName = table.Key.TABLE_NAME;
+
+				string sql = GetSqlType switch
+				{
+					SqlEnumType.SQL_SERVER =>
+						$@"ALTER TABLE [{schema}].[{tableName}]
+				   ADD IsDeleted BIT NOT NULL DEFAULT(0)",
+
+					SqlEnumType.POSTGRES_SQL =>
+						$@"ALTER TABLE ""{schema}"".""{tableName}""
+				   ADD COLUMN ""IsDeleted"" BOOLEAN NOT NULL DEFAULT FALSE",
+
+					SqlEnumType.MYSQL =>
+						$@"ALTER TABLE `{tableName}`
+				   ADD COLUMN `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0",
+
+					_ => throw new NotSupportedException("Motor no soportado")
+				};
+
+				try
+				{
+					// Ejecutar script
+					using var command = ComandoSql(sql, connection);
+					command.ExecuteNonQuery();
+
+					LoggerServices.AddMessageInfo(
+						$"Columna IsDeleted agregada a {tableName}");
+				}
+				catch (Exception ex)
+				{
+					LoggerServices.AddMessageError(
+						$"Error agregando IsDeleted en {tableName}", ex);
+				}
 			}
 		}
 
