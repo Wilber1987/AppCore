@@ -245,15 +245,20 @@ namespace APPCORE.BDCore.Implementations
 					sqlDbType = SqlDbType.DateTime;
 					break;
 				case "time":
-				sqlDbType = SqlDbType.Time;
-				break;
+					sqlDbType = SqlDbType.Time;
+					break;
+				case "varbinary":
+				case "image":
+				case "binary":
+					sqlDbType = SqlDbType.VarBinary;
+					break;
 				default:
 					//Lanzar una excepción si el tipo de datos no es compatible
 					throw new ArgumentException($"Tipo de datos no soportado: {dataType}");
 			}
 			// Verificar si la propiedad tiene el atributo JsonProp
 			JsonProp? jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(oProperty, typeof(JsonProp));
-			if (jsonPropAttribute != null && !isJsonFilter )
+			if (jsonPropAttribute != null && !isJsonFilter)
 			{
 				// Tratar el valor como JSON si la propiedad tiene el atributo JsonProp
 				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);// JsonConvert.SerializeObject(value);
