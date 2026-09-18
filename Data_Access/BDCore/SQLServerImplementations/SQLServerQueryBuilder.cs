@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -87,6 +88,18 @@ namespace APPCORE.BDCore.Implementations
 
 
 			// Construir la consulta SELECT principal
+			if (entityProps.Find(prop => prop.COLUMN_NAME == "IsDeleted") != null)
+			{
+				if (CondSQL.Length == 0)
+				{
+					WhereOrAnd(ref CondicionString);
+					CondicionString += " IsDeleted != 1 ";
+				}
+				else if (CondSQL.Length > 0)
+				{
+					CondSQL += " and IsDeleted != 1 ";
+				}
+			}
 			string queryString = $"SELECT {(filterLimit != null ? $" top {filterLimit?.Values?[0]}" : "")} {Columns}"
 								+ $" FROM {entityProps[0].TABLE_SCHEMA}.{Inst.GetType().Name} as {tableAlias}  {CondicionString} {CondSQL} ";
 
@@ -102,6 +115,8 @@ namespace APPCORE.BDCore.Implementations
 				int? pageSize = Convert.ToInt32(filterPaginated?.Values?[1] ?? "0");
 				queryString = queryString + " OFFSET " + (pageNum - 1) * pageSize + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
 			}
+
+
 
 			// Construir la consulta COUNT para obtener el total de registros
 			string queryStringCount = $" SELECT count(*) FROM {entityProps[0].TABLE_SCHEMA}.{Inst?.GetType().Name} as {tableAlias} {CondicionString} {CondSQL};";
@@ -255,20 +270,59 @@ namespace APPCORE.BDCore.Implementations
 					sqlDbType = SqlDbType.VarBinary;
 					break;
 				default:
-					//Lanzar una excepción si el tipo de datos no es compatible
 					throw new ArgumentException($"Tipo de datos no soportado: {dataType}");
 			}
+
+			// Si el valor es una fecha real (no null) y está fuera del rango soportado por SQL Server,
+			// se ajusta a una fecha mínima de margen: hoy + 1 mes. Esto evita que errores de digitación
+			// (ej. años truncados como "0202") tumben el proceso.
+			// Si el tipo de dato es fecha, validar y ajustar si el valor está fuera de rango o es inválido
+			if (sqlDbType == SqlDbType.DateTime)
+			{
+				DateTime? dtValue = null;
+
+				if (value is DateTime dt)
+				{
+					dtValue = dt;
+				}
+				else if (value != null && value != DBNull.Value)
+				{
+					// El valor llega como string (u otro tipo) representando una fecha
+					if (DateTime.TryParse(value.ToString(), out DateTime parsed))
+					{
+						dtValue = parsed;
+					}
+					else
+					{
+						// No se pudo parsear en absoluto (formato corrupto) -> también se ajusta
+						DateTime fechaAjustada = DateTime.Now.AddMonths(1);
+						// Logger.Warn($"Valor de fecha no parseable en parámetro '{name}': '{value}'. Se ajustó a {fechaAjustada:yyyy-MM-dd}.");
+						value = fechaAjustada;
+					}
+				}
+
+				if (dtValue.HasValue && (dtValue.Value < (DateTime)SqlDateTime.MinValue || dtValue.Value > (DateTime)SqlDateTime.MaxValue))
+				{
+					DateTime fechaAjustada = DateTime.Now.AddMonths(1);
+					// Logger.Warn($"Fecha fuera de rango en parámetro '{name}': {dtValue.Value}. Se ajustó a {fechaAjustada:yyyy-MM-dd}.");
+					value = fechaAjustada;
+				}
+				else if (dtValue.HasValue)
+				{
+					// Aseguramos que el parámetro reciba un DateTime real, no el string original
+					value = dtValue.Value;
+				}
+			}
+
 			// Verificar si la propiedad tiene el atributo JsonProp
 			JsonProp? jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(oProperty, typeof(JsonProp));
 			if (jsonPropAttribute != null && !isJsonFilter)
 			{
-				// Tratar el valor como JSON si la propiedad tiene el atributo JsonProp
-				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);// JsonConvert.SerializeObject(value);
+				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);
 				return new SqlParameter(name, sqlDbType) { Value = JValue.Parse(jsonValue).ToString(Formatting.Indented) };
 			}
 			else
 			{
-				// Crear un parámetro normal si la propiedad no tiene el atributo JsonProp
 				return new SqlParameter(name, sqlDbType) { Value = value };
 			}
 		}

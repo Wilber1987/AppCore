@@ -26,7 +26,7 @@ namespace APPCORE.Security
 			{
 				Security_Permissions_Roles IdI = new Security_Permissions_Roles();
 				IdI.Id_Role = this.Id_Role;
-				IdI.Delete();
+				IdI.Delete(true);
 				foreach (Security_Permissions_Roles obj in this.Security_Permissions_Roles)
 				{
 					obj.Id_Role = this.Id_Role;
@@ -180,7 +180,7 @@ namespace APPCORE.Security
 			{
 				Security_Users_Roles IdI = new Security_Users_Roles();
 				IdI.Id_User = this.Id_User;
-				IdI.Delete();
+				IdI.Delete(true);
 				foreach (Security_Users_Roles obj in this.Security_Users_Roles)
 				{
 					obj.Id_User = this.Id_User;

@@ -318,7 +318,7 @@ namespace APPCORE.BDCore.Abstracts
 						((EntityClass)itemToDelete).SetConnection(entity.GetConnection());
 						((EntityClass)itemToDelete).SetSqlConnection(entity.GetSqlConnection());
 						((EntityClass)itemToDelete).SetTransaction(entity.GetTransaction());
-						Delete((EntityClass)itemToDelete);
+						Delete((EntityClass)itemToDelete, true);
 					}
 
 					// Inserta o actualiza los elementos de la lista entrante
@@ -381,9 +381,9 @@ namespace APPCORE.BDCore.Abstracts
 			// Ejecuta la consulta SQL y retorna el resultado
 			return GDatos?.ExcuteSqlQuery(strQuery, Inst.GetSqlConnection(), Inst.GetTransaction(), parameters);
 		}
-		public object? Delete(EntityClass Inst)
+		public object? Delete(EntityClass Inst, bool fullDelete = false)
 		{
-			(string? strQuery, List<IDbDataParameter>? parameters) = QueryBuilder.BuildDeleteQuery(Inst);
+			(string? strQuery, List<IDbDataParameter>? parameters) = QueryBuilder.BuildDeleteQuery(Inst, fullDelete);
 			return GDatos?.ExcuteSqlQueryWithOutScalar(strQuery, Inst.GetSqlConnection(), Inst.GetTransaction(), parameters);
 		}
 		public int Count(EntityClass Inst)

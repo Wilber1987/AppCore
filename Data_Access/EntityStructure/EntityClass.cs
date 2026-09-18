@@ -277,7 +277,7 @@ public abstract class EntityClass : TransactionalClass
 	}
 
 	// Método para eliminar una entidad de la base de datos
-	public ResponseService Delete()
+	public ResponseService Delete(bool fullDelete = false)
 	{
 		using (var conn = MDataMapper?.GDatos.CrearConexion(MDataMapper?.GDatos?.ConexionString ?? ""))
 		{
@@ -287,7 +287,7 @@ public abstract class EntityClass : TransactionalClass
 			SetTransaction(transaction);
 			try
 			{
-				var result = MDataMapper?.Delete(this);
+				var result = MDataMapper?.Delete(this, fullDelete);
 				transaction?.Commit();
 				return  new ResponseService() { status = 200, message = this.GetType().Name + " Eliminado correctamente" };;
 			}
