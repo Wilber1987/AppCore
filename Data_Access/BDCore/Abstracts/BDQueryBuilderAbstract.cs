@@ -1,6 +1,8 @@
 using System.Data;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 
 namespace APPCORE.BDCore.Abstracts
@@ -203,7 +205,7 @@ namespace APPCORE.BDCore.Abstracts
 			}
 			CondicionString = CondicionString.TrimEnd(new char[] { '0', 'R' });
 			//string strQuery = "DELETE FROM  " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + CondicionString;
-			string strQuery = "UPDATE " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + " SET IsDeleted = 1 "  + CondicionString ;
+			string strQuery = "UPDATE " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + " SET IsDeleted = 1 " + CondicionString;
 			//LoggerServices.AddMessageInfo(strQuery);
 			return (strQuery, parameters);
 		}
@@ -344,7 +346,7 @@ namespace APPCORE.BDCore.Abstracts
 					}
 					break;
 				case "JSONPROP_EQUAL":
-					//PropertyInfo? propJSON = props.ToList().Find(p => p.Name.ToLower().Equals(filter?.ObjectName?.ToLower())); // Obtiene la propiedad correspondiente al nombre proporcionado en el filtro
+					//PropertyInfo? propJSON = props.ToList().Find(p => p.Name.ToLower().Equals(filter?.PropName?.ToLower())); // Obtiene la propiedad correspondiente al nombre proporcionado en el filtro
 					if (prop != null)
 					{
 						AtributeName = prop.Name;
@@ -354,8 +356,27 @@ namespace APPCORE.BDCore.Abstracts
 							string paramName = $"@{AtributeName}_{parameters.Count + 1}";
 							IDbDataParameter parameter1 = CreateParameter(paramName, filter.Values[0], filter.PropSQLType, prop, true);
 							parameters.Add(parameter1);
-							// Construimos la condición con JSON_VALUE
-							CondicionString += $" JSON_VALUE({AtributeName}, '$.{filter.JsonPropName}') = {paramName} ";
+
+							// Detectamos si la propiedad es una colección (array en JSON)
+							// o un objeto plano, usando el propio tipo de la propiedad.
+							bool esColeccion = typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType)
+												&& prop.PropertyType != typeof(string);
+
+							if (esColeccion)
+							{
+								// La propiedad es List<T> (o array) => el JSON es un ARRAY de objetos
+								CondicionString += $@" EXISTS (
+									SELECT 1
+									FROM OPENJSON({AtributeName})
+										WITH ({filter.JsonPropName} NVARCHAR(MAX) '$.{filter.JsonPropName}') AS j
+									WHERE j.{filter.JsonPropName} = {paramName}
+								) ";
+							}
+							else
+							{
+								// La propiedad es un objeto simple => el JSON es un OBJETO plano
+								CondicionString += $" JSON_VALUE({AtributeName}, '$.{filter.JsonPropName}') = {paramName} ";
+							}
 						}
 						else
 						{
@@ -385,7 +406,7 @@ namespace APPCORE.BDCore.Abstracts
 
 		protected void WhereOrAnd(ref string CondicionString)
 		{
-			if (!CondicionString.Contains("WHERE"))
+			if (!CondicionString.ToUpper().Contains("WHERE"))
 				CondicionString = " WHERE ";
 			else
 				CondicionString += " AND ";
@@ -468,7 +489,7 @@ namespace APPCORE.BDCore.Abstracts
 		{
 			if (entityClass == null || properties == null || properties.Length == 0)
 				return null;
-				
+
 			List<EntityProps> entityProps = entityClass.DescribeEntity(GetSqlType());
 
 			Type entityType = entityClass.GetType();
@@ -490,8 +511,8 @@ namespace APPCORE.BDCore.Abstracts
 			// Construcción de la consulta SQL
 			StringBuilder sqlQuery = new StringBuilder();
 			sqlQuery.Append($"UPDATE {entityProps[0].TABLE_SCHEMA + "." + tableName} SET ");
-			
-			sqlQuery.Append(string.Join(", ", properties.Select(p =>   $"{p} = NULL")));
+
+			sqlQuery.Append(string.Join(", ", properties.Select(p => $"{p} = NULL")));
 
 			sqlQuery.Append($" WHERE {primaryKeyColumn} = {FormatValue(primaryKeyValue)};");
 
@@ -505,5 +526,13 @@ namespace APPCORE.BDCore.Abstracts
 		//DATA SQUEMA
 		#endregion
 
+		// Idealmente esto va como campo estático readonly de la clase,
+		// para no crear una instancia nueva en cada llamada al método.
+		public static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+		{
+			Converters = { new JsonStringEnumConverter() }
+		};
+
 	}
+
 }

@@ -258,7 +258,8 @@ namespace APPCORE.BDCore.Implementations
 			if (jsonPropAttribute != null && !isJsonFilter )
 			{
 				// Tratar el valor como JSON si la propiedad tiene el atributo JsonProp
-				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);// JsonConvert.SerializeObject(value);
+				//string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);// JsonConvert.SerializeObject(value);
+				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value, _jsonOptions);
 				return new SqlParameter(name, sqlDbType) { Value = JValue.Parse(jsonValue).ToString(Formatting.Indented) };
 			}
 			else
