@@ -8,6 +8,6 @@ namespace APPCORE.Services
         public string? Value { get; set; }        
         public string? idetify { get; set; }
         public DateTime? created { get; set; }
-        public DateTime ExpireTime { get; set; }
+        public DateTime? ExpireTime { get; set; }
     }
 }
