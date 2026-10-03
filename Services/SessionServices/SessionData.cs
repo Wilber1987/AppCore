@@ -1,6 +1,6 @@
 namespace APPCORE.Services
 {
-    public class SessionData:EntityClass
+    public class SessionData: EntityClass
     {
         [PrimaryKey]
         public int? Id { get; set;}

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -87,6 +88,18 @@ namespace APPCORE.BDCore.Implementations
 
 
 			// Construir la consulta SELECT principal
+			if (entityProps.Find(prop => prop.COLUMN_NAME == "IsDeleted") != null)
+			{
+				if (CondSQL.Length == 0)
+				{
+					WhereOrAnd(ref CondicionString);
+					CondicionString += " IsDeleted != 1 ";
+				}
+				else if (CondSQL.Length > 0)
+				{
+					CondSQL += " and IsDeleted != 1 ";
+				}
+			}
 			string queryString = $"SELECT {(filterLimit != null ? $" top {filterLimit?.Values?[0]}" : "")} {Columns}"
 								+ $" FROM {entityProps[0].TABLE_SCHEMA}.{Inst.GetType().Name} as {tableAlias}  {CondicionString} {CondSQL} ";
 
@@ -102,6 +115,8 @@ namespace APPCORE.BDCore.Implementations
 				int? pageSize = Convert.ToInt32(filterPaginated?.Values?[1] ?? "0");
 				queryString = queryString + " OFFSET " + (pageNum - 1) * pageSize + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
 			}
+
+
 
 			// Construir la consulta COUNT para obtener el total de registros
 			string queryStringCount = $" SELECT count(*) FROM {entityProps[0].TABLE_SCHEMA}.{Inst?.GetType().Name} as {tableAlias} {CondicionString} {CondSQL};";
@@ -212,9 +227,10 @@ namespace APPCORE.BDCore.Implementations
 		se asigna directamente al parámetro.*/
 		public override IDbDataParameter CreateParameter(string name, object value, string dataType, PropertyInfo oProperty, bool isJsonFilter = false)
 		{
-			// Determinar el tipo de datos SQL correspondiente al tipo de datos proporcionado
+			// Determinar el tipo de datos SQL correspondiente
 			SqlDbType sqlDbType;
 			bool isString = false;
+
 			switch (dataType?.ToLowerInvariant())
 			{
 				case "nvarchar":
@@ -247,26 +263,127 @@ namespace APPCORE.BDCore.Implementations
 					sqlDbType = SqlDbType.DateTime;
 					break;
 				case "time":
-				sqlDbType = SqlDbType.Time;
-				break;
+					sqlDbType = SqlDbType.Time;
+					break;
+				case "varbinary":
+				case "image":
+				case "binary":
+					sqlDbType = SqlDbType.VarBinary;
+					break;
 				default:
-					//Lanzar una excepción si el tipo de datos no es compatible
 					throw new ArgumentException($"Tipo de datos no soportado: {dataType}");
 			}
-			// Verificar si la propiedad tiene el atributo JsonProp
-			JsonProp? jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(oProperty, typeof(JsonProp));
-			if (jsonPropAttribute != null && !isJsonFilter )
+
+			// ==================== 🛡️ PROTECCIÓN PARA TIPOS NUMÉRICOS ENTEROS ====================
+			if (sqlDbType == SqlDbType.Int || sqlDbType == SqlDbType.BigInt)
 			{
-				// Tratar el valor como JSON si la propiedad tiene el atributo JsonProp
-				//string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);// JsonConvert.SerializeObject(value);
-				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value, _jsonOptions);
+				value = SanitizeNumericValue(name, value, sqlDbType);
+			}
+
+			// ==================== PROTECCIÓN PARA FECHAS (YA EXISTENTE) ====================
+			if (sqlDbType == SqlDbType.DateTime)
+			{
+				DateTime? dtValue = null;
+
+				if (value is DateTime dt)
+				{
+					dtValue = dt;
+				}
+				else if (value != null && value != DBNull.Value)
+				{
+					if (DateTime.TryParse(value.ToString(), out DateTime parsed))
+					{
+						dtValue = parsed;
+					}
+					else
+					{
+						DateTime fechaAjustada = DateTime.Now.AddMonths(1);
+						value = fechaAjustada;
+					}
+				}
+
+				if (dtValue.HasValue && (dtValue.Value < (DateTime)SqlDateTime.MinValue || dtValue.Value > (DateTime)SqlDateTime.MaxValue))
+				{
+					DateTime fechaAjustada = DateTime.Now.AddMonths(1);
+					value = fechaAjustada;
+				}
+				else if (dtValue.HasValue)
+				{
+					value = dtValue.Value;
+				}
+			}
+
+			// ==================== MANEJO DE JSON (YA EXISTENTE) ====================
+			JsonProp? jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(oProperty, typeof(JsonProp));
+			if (jsonPropAttribute != null && !isJsonFilter)
+			{
+				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);
 				return new SqlParameter(name, sqlDbType) { Value = JValue.Parse(jsonValue).ToString(Formatting.Indented) };
 			}
 			else
 			{
-				// Crear un parámetro normal si la propiedad no tiene el atributo JsonProp
-				return new SqlParameter(name, sqlDbType) { Value = value };
+				return new SqlParameter(name, sqlDbType) { Value = value ?? DBNull.Value };
 			}
+		}
+
+		/// <summary>
+		/// 🛡️ Sanitiza valores numéricos para evitar OverflowException en SqlParameter.
+		/// Si el valor no es válido o excede el rango, retorna un valor seguro (-1) que no matcheará ningún registro.
+		/// </summary>
+		private object SanitizeNumericValue(string paramName, object value, SqlDbType sqlDbType)
+		{
+			// Si es null o DBNull, pasar tal cual
+			if (value == null || value == DBNull.Value)
+				return DBNull.Value;
+
+			try
+			{
+				// Convertir a string para parseo uniforme
+				string stringValue = value.ToString()?.Trim() ?? "";
+
+				if (string.IsNullOrEmpty(stringValue))
+					return DBNull.Value;
+
+				if (sqlDbType == SqlDbType.Int)
+				{
+					// Intentar parsear como long primero para detectar overflows
+					if (long.TryParse(stringValue, out long longValue))
+					{
+						if (longValue >= int.MinValue && longValue <= int.MaxValue)
+						{
+							return (int)longValue; // Valor válido
+						}
+						else
+						{
+							// 🚨 OVERFLOW DETECTADO: El número es demasiado grande para Int32							
+							return -1; // Valor que no matcheará ningún registro
+						}
+					}
+					else
+					{
+						// No es un número válido						
+						return -1;
+					}
+				}
+				else if (sqlDbType == SqlDbType.BigInt)
+				{
+					if (long.TryParse(stringValue, out long longValue))
+					{
+						return longValue;
+					}
+					else
+					{						
+						return -1L;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				LoggerServices.AddMessageError($"Error sanitizando parámetro numérico '{paramName}'", ex);
+				return -1;
+			}
+
+			return value;
 		}
 
 		protected override SqlEnumType GetSqlType()

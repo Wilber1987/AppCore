@@ -182,7 +182,7 @@ namespace APPCORE.BDCore.Abstracts
 			// Retorna la consulta INSERT y los parámetros SQL creados
 			return (QUERY, parameters);
 		}
-		public (string?, List<IDbDataParameter>?) BuildDeleteQuery(EntityClass Inst)
+		public (string?, List<IDbDataParameter>?) BuildDeleteQuery(EntityClass Inst, bool fullDelete = false )
 		{
 			string TableName = Inst.GetType().Name.ToLower();
 			string CondicionString = "";
@@ -204,8 +204,15 @@ namespace APPCORE.BDCore.Abstracts
 
 			}
 			CondicionString = CondicionString.TrimEnd(new char[] { '0', 'R' });
-			//string strQuery = "DELETE FROM  " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + CondicionString;
-			string strQuery = "UPDATE " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + " SET IsDeleted = 1 " + CondicionString;
+			string strQuery = "";
+			if (fullDelete)
+			{
+				strQuery = "DELETE FROM  " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + CondicionString;
+			}
+			else
+			{
+				strQuery = "UPDATE " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + " SET IsDeleted = 1 "  + CondicionString ;
+			}
 			//LoggerServices.AddMessageInfo(strQuery);
 			return (strQuery, parameters);
 		}

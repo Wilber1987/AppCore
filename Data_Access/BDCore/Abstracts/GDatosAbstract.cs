@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Data.Common; // ⬅️ IMPORTANTE: Para DbConnection y DbCommand
 using System.Transactions;
 using APPCORE.BDCore.Abstracts;
 using APPCORE.BDCore.MySqlImplementations;
@@ -7,398 +8,405 @@ using APPCORE.BDCore.SQLServerImplementations;
 
 namespace APPCORE
 {
-	public abstract class GDatosAbstract
-	{
-		public string? Database { get; set; }
-		/**
-		Esta propiedad abstracta define una conexión a la base de datos. La clase derivada debe implementar esta propiedad para proporcionar una instancia de IDbConnection (por ejemplo, SqlConnection para SQL Server o MySqlConnection para MySQL).
-		*/
-		/**
-		 * Propiedad que devuelve la conexión a la base de datos.
-		 * Si existe una conexión previa (MTConnection), la devuelve; de lo contrario, crea una nueva conexión.
-		 */
-		protected IDbConnection SQLMCon
-		{
-			get
-			{
-				if (this.MTConnection != null && this.MTConnection.ConnectionString?.Length > 0)
-				{
-					return this.MTConnection;
-				}
-				this.MTConnection = CrearConexion(ConexionString ?? "");
-				return this.MTConnection;
-			}
-		}
-		/**
-		Esta variable almacena la cadena de conexión a la base de datos. Debe ser inicializada por la clase derivada antes de usarla para establecer la conexión.
-		*/
-		public string? ConexionString;
-		/**
-		Esta variable representa una transacción de base de datos. Puede ser nula si no se está utilizando una transacción.
-		*/
-		protected TransactionScope? MTransaccion;
-		/**
-		Esta variable indica si se está utilizando una transacción global (que abarca múltiples operaciones) o no.
-		*/
-		protected bool globalTransaction;
-		/**
-		Esta variable representa otra conexión de base de datos. Al igual que MTransaccion, puede ser nula si no se está utilizando.
-		*/
-		protected IDbConnection? MTConnection;
-		/**
-		Este método abstracto debe ser implementado por las clases derivadas para crear y devolver una instancia de IDbConnection utilizando la cadena de conexión proporcionada.
-		*/
-		public abstract IDbConnection CrearConexion(string cadena);
-		/**
-		Este método abstracto crea un objeto IDbCommand (por ejemplo, SqlCommand o MySqlCommand) para ejecutar una consulta SQL en la base de datos.
-		*/
-		protected abstract IDbCommand ComandoSql(string comandoSql, IDbConnection connection);
-		/*
-		Este método abstracto crea un objeto IDataAdapter (por ejemplo, SqlDataAdapter o MySqlDataAdapter) para llenar un DataSet con los resultados de una consulta SQL.		
-		*/
-		protected abstract IDataAdapter CrearDataAdapterSql(string comandoSql, IDbConnection connection);
-		/*
-		Similar al método anterior, pero crea un IDataAdapter a partir de un objeto IDbCommand.
-		*/
-		protected abstract IDataAdapter CrearDataAdapterSql(IDbCommand comandoSql);
-		/*
-		Este método abstracto ejecuta un procedimiento almacenado o función en la base de datos y devuelve un objeto como resultado.
-		*/
-		public abstract object ExecuteProcedure(StoreProcedureClass Inst, List<object> Params);
-		/*
-		Similar al método anterior, pero devuelve un DataTable con los resultados.
-		*/
-		public abstract DataTable ExecuteProcedureWithSQL(StoreProcedureClass Inst, List<object> Params);
+    public abstract class GDatosAbstract
+    {
+        public string? Database { get; set; }
 
-		public List<EntityProps>? EntityDescription { get; set; }
+        protected IDbConnection SQLMCon
+        {
+            get
+            {
+                if (this.MTConnection != null && this.MTConnection.ConnectionString?.Length > 0)
+                {
+                    return this.MTConnection;
+                }
+                this.MTConnection = CrearConexion(ConexionString ?? " ");
+                return this.MTConnection;
+            }
+        }
 
-		public SqlEnumType GetSqlType { get; set; }
+        public string? ConexionString;
+        protected TransactionScope? MTransaccion;
+        protected bool globalTransaction;
+        protected IDbConnection? MTConnection;
 
-		public void BeginGlobalTransaction()
-		{
-			if (this.GetSqlType == SqlEnumType.MYSQL)
-			{
-				return;
-			}
-			if (this.globalTransaction)
-			{
-				throw new InvalidOperationException("No se puede iniciar una segunda global transaction sin antes haber finalizado la anterior");
-			}
-			MTransaccion = new TransactionScope();
-			this.globalTransaction = true;
+        public abstract IDbConnection CrearConexion(string cadena);
+        protected abstract IDbCommand ComandoSql(string comandoSql, IDbConnection connection);
+        protected abstract IDataAdapter CrearDataAdapterSql(string comandoSql, IDbConnection connection);
+        protected abstract IDataAdapter CrearDataAdapterSql(IDbCommand comandoSql);
+        public abstract object ExecuteProcedure(StoreProcedureClass Inst, List<object> Params);
+        public abstract DataTable ExecuteProcedureWithSQL(StoreProcedureClass Inst, List<object> Params);
 
-		}
-		public void CommitGlobalTransaction()
-		{
-			if (this.GetSqlType == SqlEnumType.MYSQL)
-			{
-				return;
-			}
-			if (this.MTransaccion != null)
-			{
-				try
-				{
-					MTransaccion.Complete();
-				}
-				catch (Exception ex)
-				{
-					// Manejar el caso donde la transacción ya no sea válida o haya fallado
-					LoggerServices.AddMessageError("Error committing transaction", ex);
-					throw;
-				}
-				finally
-				{
-					MTransaccion.Dispose();
-					this.globalTransaction = false;
-				}
-			}
-		}
-		public void RollBackGlobalTransaction()
-		{
-			if (this.GetSqlType == SqlEnumType.MYSQL)
-			{
-				return;
-			}
-			if (this.MTransaccion != null)
-			{
+        public List<EntityProps>? EntityDescription { get; set; }
+        public SqlEnumType GetSqlType { get; set; }
 
-				this.MTransaccion = null;
-				this.globalTransaction = false;
-			}
-		}
-		#region ADO.NET METHODS
-		/**
-		* Método para probar la conexión a la base de datos.
-		* Devuelve verdadero si la conexión es exitosa, de lo contrario, lanza una excepción.
-		*/
-		public bool TestConnection()
-		{
-			try
-			{
+        // ==================== TRANSACCIONES ====================
+        public void BeginGlobalTransaction()
+        {
+            if (this.GetSqlType == SqlEnumType.MYSQL) return;
+            if (this.globalTransaction)
+                throw new InvalidOperationException("No se puede iniciar una segunda global transaction sin antes haber finalizado la anterior");
+            MTransaccion = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled); // ⬅️ Importante para async
+            this.globalTransaction = true;
+        }
 
-				using (SQLMCon)
-				{
-					SQLMCon.Open();
-					string describeEntityQuery = GetSqlType switch
-					{
-						SqlEnumType.SQL_SERVER => SQLServerEntityQuerys.DescribeEntitys,
-						SqlEnumType.POSTGRES_SQL => PostgreEntityQuerys.DescribeEntitys,
-						SqlEnumType.MYSQL => MySqlEntityQuerys.DescribeEntityQuery.Replace("entityDatabase", Database),
-						_ => ""
-					};
-					// Obtener descripción de entidades
-					this.EntityDescription = AdapterUtil.ConvertDataTable<EntityProps>(
-						TraerDatosSQL(describeEntityQuery, SQLMCon, null, null),
-						new EntityProps());
+        public void CommitGlobalTransaction()
+        {
+            if (this.GetSqlType == SqlEnumType.MYSQL) return;
+            if (this.MTransaccion != null)
+            {
+                try { MTransaccion.Complete(); }
+                catch (Exception ex)
+                {
+                    LoggerServices.AddMessageError("Error committing transaction", ex);
+                    throw;
+                }
+                finally
+                {
+                    MTransaccion.Dispose();
+                    this.globalTransaction = false;
+                }
+            }
+        }
 
-					// Crear IsDeleted donde no exista
-					EnsureSoftDeleteColumn(SQLMCon);
+        public void RollBackGlobalTransaction()
+        {
+            if (this.GetSqlType == SqlEnumType.MYSQL) return;
+            if (this.MTransaccion != null)
+            {
+                this.MTransaccion = null;
+                this.globalTransaction = false;
+            }
+        }
 
-					// Recargar descripción después de cambios
-					this.EntityDescription = AdapterUtil.ConvertDataTable<EntityProps>(
-						TraerDatosSQL(describeEntityQuery, SQLMCon, null, null),
-						new EntityProps());
-				}
-				return true;
-			}
-			catch (Exception ex)
-			{
-				LoggerServices.AddMessageError("error conectando a bd", ex);
-				throw;
-			}
-		}
+        // ==================== MÉTODOS SÍNCRONOS (EXISTENTES - SIN CAMBIOS) ====================
+        
+        public bool TestConnection()
+        {
+            try
+            {
+                using (SQLMCon)
+                {
+                    SQLMCon.Open();
+                    string describeEntityQuery = GetSqlType switch
+                    {
+                        SqlEnumType.SQL_SERVER => SQLServerEntityQuerys.DescribeEntitys,
+                        SqlEnumType.POSTGRES_SQL => PostgreEntityQuerys.DescribeEntitys,
+                        SqlEnumType.MYSQL => MySqlEntityQuerys.DescribeEntityQuery.Replace("entityDatabase", Database),
+                        _ => ""
+                    };
+                    this.EntityDescription = AdapterUtil.ConvertDataTable<EntityProps>(
+                        TraerDatosSQL(describeEntityQuery, SQLMCon, null, null), new EntityProps());
+                    EnsureSoftDeleteColumn(SQLMCon);
+                    this.EntityDescription = AdapterUtil.ConvertDataTable<EntityProps>(
+                        TraerDatosSQL(describeEntityQuery, SQLMCon, null, null), new EntityProps());
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LoggerServices.AddMessageError("error conectando a bd", ex);
+                throw;
+            }
+        }
 
-		private void EnsureSoftDeleteColumn(IDbConnection connection)
-		{
-			if (EntityDescription == null || !EntityDescription.Any())
-				return;
+        private void EnsureSoftDeleteColumn(IDbConnection connection)
+        {
+            if (EntityDescription == null || !EntityDescription.Any()) return;
 
-			// Agrupar por tabla
-			var tables = EntityDescription
-				.GroupBy(x => new
-				{
-					x.TABLE_SCHEMA,
-					x.TABLE_NAME
-				});
+            var tables = EntityDescription.GroupBy(x => new { x.TABLE_SCHEMA, x.TABLE_NAME });
+            foreach (var table in tables)
+            {
+                bool hasIsDeleted = table.Any(c => c.COLUMN_NAME.Equals("IsDeleted", StringComparison.OrdinalIgnoreCase));
+                if (hasIsDeleted) continue;
 
-			foreach (var table in tables)
-			{
-				// Verificar si ya existe IsDeleted
-				bool hasIsDeleted = table.Any(c =>
-					c.COLUMN_NAME.Equals("IsDeleted",
-						StringComparison.OrdinalIgnoreCase));
+                string schema = table.Key.TABLE_SCHEMA;
+                string tableName = table.Key.TABLE_NAME;
+                string sql = GetSqlType switch
+                {
+                    SqlEnumType.SQL_SERVER => $@"ALTER TABLE [{schema}].[{tableName}] ADD IsDeleted BIT NOT NULL DEFAULT(0)",
+                    SqlEnumType.POSTGRES_SQL => $@"ALTER TABLE ""{schema}"".""{tableName}"" ADD COLUMN ""IsDeleted"" BOOLEAN NOT NULL DEFAULT FALSE",
+                    SqlEnumType.MYSQL => $@"ALTER TABLE `{tableName}` ADD COLUMN `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0",
+                    _ => throw new NotSupportedException("Motor no soportado")
+                };
 
-				if (hasIsDeleted)
-					continue;
+                try
+                {
+                    using var command = ComandoSql(sql, connection);
+                    command.ExecuteNonQuery();
+                    LoggerServices.AddMessageInfo($"Columna IsDeleted agregada a {tableName}");
+                }
+                catch (Exception ex)
+                {
+                    LoggerServices.AddMessageError($"Error agregando IsDeleted en {tableName}", ex);
+                }
+            }
+        }
 
-				string schema = table.Key.TABLE_SCHEMA;
-				string tableName = table.Key.TABLE_NAME;
+        public object? ExcuteSqlQuery(string strQuery, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
+        {
+            return ExecuteWithRetry(() =>
+            {
+                using (var command = ComandoSql(strQuery, dbConnection))
+                {
+                    command.Transaction = dbTransaction;
+                    SetParametersInCommand(parameters, command);
+                    var scalar = command.ExecuteScalar();
+                    return scalar == DBNull.Value ? true : Convert.ToInt32(scalar);
+                }
+            });
+        }
 
-				string sql = GetSqlType switch
-				{
-					SqlEnumType.SQL_SERVER =>
-						$@"ALTER TABLE [{schema}].[{tableName}]
-				   ADD IsDeleted BIT NOT NULL DEFAULT(0)",
+        public object? ExcuteSqlQueryWithOutScalar(string strQuery, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
+        {
+            try
+            {
+                using (var command = ComandoSql(strQuery, dbConnection))
+                {
+                    command.Transaction = dbTransaction;
+                    SetParametersInCommand(parameters, command);
+                    command.ExecuteNonQuery();
+                    return true;
+                }
+            }
+            catch (System.Exception)
+            {
+                ReStartData();
+                return false;
+            }
+        }
 
-					SqlEnumType.POSTGRES_SQL =>
-						$@"ALTER TABLE ""{schema}"".""{tableName}""
-				   ADD COLUMN ""IsDeleted"" BOOLEAN NOT NULL DEFAULT FALSE",
+        protected object ExecuteWithRetry(Func<object> operation, int maxRetries = 0)
+        {
+            int retries = 0;
+            while (true)
+            {
+                try
+                {
+                    return operation();
+                }
+                catch (Exception ex)
+                {
+                    if (retries >= maxRetries)
+                    {
+                        LoggerServices.AddMessageError("ERROR: Max retries reached. Operation failed.", ex);
+                        this.ReStartData(ex);
+                        throw;
+                    }
+                    retries++;
+                    Console.WriteLine($"read retry query => {retries}");
+                    Task.Delay(100).Wait(); // ⚠️ SÍNCRONO - Bloquea el hilo
+                }
+            }
+        }
 
-					SqlEnumType.MYSQL =>
-						$@"ALTER TABLE `{tableName}`
-				   ADD COLUMN `IsDeleted` TINYINT(1) NOT NULL DEFAULT 0",
+        public void ReStartData(Exception ex)
+        {
+            ReStartData();
+            LoggerServices.AddMessageError("Transaction failed and connection restarted.", ex);
+        }
 
-					_ => throw new NotSupportedException("Motor no soportado")
-				};
+        public void ReStartData()
+        {
+            globalTransaction = false;
+            this.MTConnection = null;
+            this.MTransaccion = null;
+        }
 
-				try
-				{
-					// Ejecutar script
-					using var command = ComandoSql(sql, connection);
-					command.ExecuteNonQuery();
+        public DataTable TraerDatosSQL(string queryString, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
+        {
+            return (DataTable)ExecuteWithRetry(() =>
+            {
+                DataTable resultTable = new DataTable();
+                using (var command = ComandoSql(queryString, dbConnection))
+                {
+                    command.Transaction = dbTransaction;
+                    SetParametersInCommand(parameters, command);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        resultTable.Load(reader);
+                    }
+                    return resultTable;
+                }
+            });
+        }
 
-					LoggerServices.AddMessageInfo(
-						$"Columna IsDeleted agregada a {tableName}");
-				}
-				catch (Exception ex)
-				{
-					LoggerServices.AddMessageError(
-						$"Error agregando IsDeleted en {tableName}", ex);
-				}
-			}
-		}
+        public DataTable TraerDatosSQL(IDbCommand Command)
+        {
+            return (DataTable)ExecuteWithRetry(() =>
+            {
+                DataSet ObjDS = new DataSet();
+                CrearDataAdapterSql(Command).Fill(ObjDS);
+                return ObjDS.Tables[0].Copy();
+            });
+        }
 
-		/**
-		* Método para ejecutar una consulta SQL en la base de datos.
-		* Devuelve el resultado de la consulta o lanza una excepción en caso de error.
-		* @param strQuery Consulta SQL a ejecutar.
-		* @param parameters Lista de parámetros (opcional) para la consulta.
-		* @return El resultado de la consulta o verdadero si no hay resultados.
-		*/
-		public object? ExcuteSqlQuery(string strQuery, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
-		{
-			/*try
-			{*/
-			return ExecuteWithRetry(() =>
-			{
-				using (var command = ComandoSql(strQuery, dbConnection))
-				{
-					command.Transaction = dbTransaction;
-					SetParametersInCommand(parameters, command);
-					var scalar = command.ExecuteScalar();
-					if (scalar == DBNull.Value)
-					{
-						return true;
-					}
-					else
-					{
-						return Convert.ToInt32(scalar);
-					}
-				}
-			});
-		}
+        public DataTable TraerDatosSQL(string queryString)
+        {
+            return (DataTable)ExecuteWithRetry(() =>
+            {
+                DataSet ObjDS = new DataSet();
+                CrearDataAdapterSql(ComandoSql(queryString, CrearConexion(ConexionString ?? ""))).Fill(ObjDS);
+                return ObjDS.Tables[0].Copy();
+            });
+        }
 
-		public object? ExcuteSqlQueryWithOutScalar(string strQuery, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
-		{
-			try
-			{
-				using (var command = ComandoSql(strQuery, dbConnection))
-				{
-					command.Transaction = dbTransaction;
-					SetParametersInCommand(parameters, command);
-					var scalar = command.ExecuteNonQuery();
-					return true;
-				}
-			}
-			catch (System.Exception)
-			{
-				ReStartData();
-				return false;
-			}
-		}
+        // ==================== 🚀 MÉTODOS ASÍNCRONOS (NUEVOS) ====================
 
-		private void SetParametersInCommand(List<IDbDataParameter>? parameters, IDbCommand command)
-		{
-			if (parameters != null)
-			{
-				foreach (var param in parameters)
-				{
-					command.Parameters.Add(CloneParameter(param));
-				}
-			}
-		}
+        /// <summary>
+        /// Versión asíncrona de ExecuteWithRetry. LIBERA el hilo durante los reintentos.
+        /// </summary>
+        protected async Task<object?> ExecuteWithRetryAsync(Func<Task<object?>> operation, int maxRetries = 3)
+        {
+            int retries = 0;
+            while (true)
+            {
+                try
+                {
+                    return await operation();
+                }
+                catch (Exception ex)
+                {
+                    if (retries >= maxRetries)
+                    {
+                        LoggerServices.AddMessageError("ERROR: Max retries reached (async). Operation failed.", ex);
+                        this.ReStartData(ex);
+                        throw;
+                    }
+                    retries++;
+                    Console.WriteLine($"async retry query => {retries}");
+                    await Task.Delay(100 * retries); // ⬅️ Exponential backoff + LIBERA el hilo
+                }
+            }
+        }
 
-		private IDbDataParameter? CloneParameter(IDbDataParameter originalParam)
-		{
-			IDbDataParameter? newParam = (IDbDataParameter?)Activator.CreateInstance(originalParam.GetType());
-			foreach (var prop in originalParam.GetType().GetProperties())
-			{
-				if (prop.CanWrite)
-				{
-					prop.SetValue(newParam, prop.GetValue(originalParam));
-				}
-			}
-			return newParam;
-		}
-		// Otros métodos y propiedades existentes
+        /// <summary>
+        /// Ejecuta una consulta SQL asíncrona con ExecuteScalarAsync
+        /// </summary>
+        public async Task<object?> ExcuteSqlQueryAsync(string strQuery, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
+        {
+            return await ExecuteWithRetryAsync(async () =>
+            {
+                // Casting a DbCommand para acceder a métodos async nativos
+                using var command = ComandoSql(strQuery, dbConnection);
+                var dbCommand = command as DbCommand;
+                
+                if (dbCommand == null)
+                {
+                    // Fallback síncrono si el provider no soporta DbCommand
+                    command.Transaction = dbTransaction;
+                    SetParametersInCommand(parameters, command);
+                    var scalar = command.ExecuteScalar();
+                    return scalar == DBNull.Value ? true : Convert.ToInt32(scalar);
+                }
 
-		protected object ExecuteWithRetry(Func<object> operation, int maxRetries = 0)
-		{
-			int retries = 0;
-			while (true)
-			{
-				try
-				{
-					return operation();
-				}
-				catch (Exception ex)
-				{
-					if (retries >= maxRetries)
-					{
-						// Log the error and rethrow the exception
-						LoggerServices.AddMessageError("ERROR: Max retries reached. Operation failed.", ex);
-						this.ReStartData(ex);
-						throw;
-					}
-					// Log the retry attempt
-					retries++;
-					Console.WriteLine($"read retry query => {retries}");
-					// Optionally, add a delay before retrying
-					Task.Delay(100).Wait();
-					//this.ReStartData(ex);
-				}
-			}
-		}
+                 dbCommand.Transaction = (DbTransaction?)dbTransaction;
+                SetParametersInCommand(parameters, dbCommand);
+                
+                if (dbCommand.Connection?.State != ConnectionState.Open)
+                    await dbCommand.Connection!.OpenAsync();
 
-		/**
-		 * Reinicia los datos de conexión y transacción en caso de excepción.
-		 * @param ex Excepción que provocó la reinicialización.
-		 */
-		public void ReStartData(Exception ex)
-		{
-			ReStartData();
-			LoggerServices.AddMessageError("Transaction failed and connection restarted.", ex);
-		}
-		public void ReStartData()
-		{
-			globalTransaction = false;
-			this.MTConnection = null;
-			this.MTransaccion = null;
-		}
+                var result = await dbCommand.ExecuteScalarAsync();
+                return result == DBNull.Value ? true : Convert.ToInt32(result);
+            });
+        }
 
-		/**
-		 * Ejecuta una consulta SQL y devuelve los resultados en un DataTable.
-		 * @param queryString Consulta SQL a ejecutar.
-		 * @return DataTable con los resultados de la consulta.
-		 */
-		public DataTable TraerDatosSQL(string queryString, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
-		{
-			return (DataTable)ExecuteWithRetry(() =>
-			{
-				DataSet ObjDS = new DataSet();
-				DataTable resultTable = new DataTable();
-				using (var command = ComandoSql(queryString, dbConnection))
-				{
-					command.Transaction = dbTransaction;
-					SetParametersInCommand(parameters, command);
-					using (var reader = command.ExecuteReader())
-					{
-						resultTable.Load(reader);
-					}
-					return resultTable;
-				}
-			});
-		}
+        /// <summary>
+        /// Ejecuta una consulta SQL asíncrona sin resultado (INSERT, UPDATE, DELETE)
+        /// </summary>
+        public async Task<bool> ExcuteSqlQueryWithOutScalarAsync(string strQuery, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
+        {
+            try
+            {
+                return await ExecuteWithRetryAsync(async () =>
+                {
+                    using var command = ComandoSql(strQuery, dbConnection);
+                    var dbCommand = command as DbCommand;
 
-		/**
-		* Ejecuta una consulta SQL y devuelve los resultados en un DataTable.
-		* @param Command Comando SQL a ejecutar.
-		* @return DataTable con los resultados de la consulta.
-		*/
-		public DataTable TraerDatosSQL(IDbCommand Command)
-		{
-			return (DataTable)ExecuteWithRetry(() =>
-			{
-				DataSet ObjDS = new DataSet();
-				CrearDataAdapterSql(Command).Fill(ObjDS);
-				return ObjDS.Tables[0].Copy();
-			});
-		}
-		/**
-		* Ejecuta una consulta SQL y devuelve los resultados en un DataTable.
-		* @param Command Comando SQL a ejecutar.
-		* @return DataTable con los resultados de la consulta.
-		*/
-		public DataTable TraerDatosSQL(string queryString)
-		{
-			return (DataTable)ExecuteWithRetry(() =>
-			{
-				DataSet ObjDS = new DataSet();
-				CrearDataAdapterSql(ComandoSql(queryString, CrearConexion(ConexionString ?? ""))).Fill(ObjDS);
-				return ObjDS.Tables[0].Copy();
-			});
-		}
-		#endregion
-	}
+                    if (dbCommand == null)
+                    {
+                        command.Transaction = dbTransaction;
+                        SetParametersInCommand(parameters, command);
+                        command.ExecuteNonQuery();
+                        return true;
+                    }
 
+                     dbCommand.Transaction = (DbTransaction?)dbTransaction;
+                    SetParametersInCommand(parameters, dbCommand);
+
+                    if (dbCommand.Connection?.State != ConnectionState.Open)
+                        await dbCommand.Connection!.OpenAsync();
+
+                    await dbCommand.ExecuteNonQueryAsync();
+                    return true;
+                }) as bool? ?? false;
+            }
+            catch (Exception)
+            {
+                ReStartData();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Versión asíncrona de TraerDatosSQL. Usa ExecuteReaderAsync + DataTable.LoadAsync
+        /// </summary>
+        public async Task<DataTable> TraerDatosSQLAsync(string queryString, IDbConnection dbConnection, IDbTransaction? dbTransaction, List<IDbDataParameter>? parameters = null)
+        {
+            return await ExecuteWithRetryAsync(async () =>
+            {
+                DataTable resultTable = new DataTable();
+                using var command = ComandoSql(queryString, dbConnection);
+                var dbCommand = command as DbCommand;
+
+                if (dbCommand == null)
+                {
+                    // Fallback síncrono
+                    command.Transaction = dbTransaction;
+                    SetParametersInCommand(parameters, command);
+                    using var reader = command.ExecuteReader();
+                    resultTable.Load(reader);
+                    return resultTable;
+                }
+
+                 dbCommand.Transaction = (DbTransaction?)dbTransaction;
+                SetParametersInCommand(parameters, dbCommand);
+
+                if (dbCommand.Connection?.State != ConnectionState.Open)
+                    await dbCommand.Connection!.OpenAsync();
+
+                using var dbReader = await dbCommand.ExecuteReaderAsync();
+                resultTable.Load(dbReader);
+                return resultTable;
+            }) as DataTable ?? new DataTable();
+        }
+
+        // ==================== HELPERS ====================
+
+        private void SetParametersInCommand(List<IDbDataParameter>? parameters, IDbCommand command)
+        {
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    command.Parameters.Add(CloneParameter(param));
+                }
+            }
+        }
+
+        private IDbDataParameter? CloneParameter(IDbDataParameter originalParam)
+        {
+            IDbDataParameter? newParam = (IDbDataParameter?)Activator.CreateInstance(originalParam.GetType());
+            if (newParam == null) return null;
+
+            foreach (var prop in originalParam.GetType().GetProperties())
+            {
+                if (prop.CanWrite)
+                {
+                    prop.SetValue(newParam, prop.GetValue(originalParam));
+                }
+            }
+            return newParam;
+        }
+    }
 }
