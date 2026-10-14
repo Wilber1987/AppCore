@@ -163,7 +163,7 @@ namespace APPCORE.Security
 			}
 			else
 			{				
-				if (new Security_Users().Find<Security_Users>(
+				if (this.Mail != null && new Security_Users().Find<Security_Users>(
 					FilterData.Distinc("Id_User", this.Id_User),
 					FilterData.Equal("Mail", this.Mail)
 				) != null)
@@ -187,7 +187,7 @@ namespace APPCORE.Security
 					obj.Save();
 				}
 			}
-			return new ResponseService(200,"Datos guardados");
+			return new ResponseService(200,"Datos guardados", this);
 		}
 
 		public object GetUsers()
