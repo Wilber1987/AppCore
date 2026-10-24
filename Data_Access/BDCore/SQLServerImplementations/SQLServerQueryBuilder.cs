@@ -317,8 +317,11 @@ namespace APPCORE.BDCore.Implementations
 			JsonProp? jsonPropAttribute = (JsonProp?)Attribute.GetCustomAttribute(oProperty, typeof(JsonProp));
 			if (jsonPropAttribute != null && !isJsonFilter)
 			{
-				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value);
-				return new SqlParameter(name, sqlDbType) { Value = JValue.Parse(jsonValue).ToString(Formatting.Indented) };
+				string jsonValue = System.Text.Json.JsonSerializer.Serialize(value, _jsonOptions);
+				return new SqlParameter(name, sqlDbType)
+				{
+					Value = JValue.Parse(jsonValue).ToString(Formatting.Indented)
+				};
 			}
 			else
 			{
@@ -372,7 +375,7 @@ namespace APPCORE.BDCore.Implementations
 						return longValue;
 					}
 					else
-					{						
+					{
 						return -1L;
 					}
 				}
