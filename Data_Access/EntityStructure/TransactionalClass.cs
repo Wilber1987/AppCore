@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data.Common;
 using APPCORE.BDCore;
 using APPCORE.BDCore.Abstracts;
 
@@ -6,9 +7,9 @@ namespace APPCORE;
 
 public abstract class TransactionalClass
 {
-	private IDbTransaction? Transaction;
-	private IDbConnection? SqlConection;
-	private WDataMapper? Conection;
+	internal IDbTransaction? Transaction;
+	internal IDbConnection? SqlConection;
+	internal WDataMapper? Conection;
 	protected WDataMapper? MDataMapper
 	{
 		get
@@ -68,4 +69,31 @@ public abstract class TransactionalClass
 	{
 		return MDataMapper?.GDatos.ExcuteSqlQueryWithOutScalar(query, GetSqlConnection(), GetTransaction());
 	}
+
+	/// <summary>
+    /// Helper: Abre la conexión de forma asíncrona
+    /// </summary>
+    internal static async Task OpenConnectionAsync(IDbConnection? conn)
+    {
+        if (conn is DbConnection dbConn)
+        {
+            await dbConn.OpenAsync();
+        }
+        else
+        {
+            conn?.Open(); // Fallback síncrono
+        }
+    }
+
+    /// <summary>
+    /// Helper: Inicia una transacción de forma asíncrona
+    /// </summary>
+    internal static async Task<IDbTransaction?> BeginTransactionAsync(IDbConnection? conn)
+    {
+        if (conn is DbConnection dbConn)
+        {
+            return await dbConn.BeginTransactionAsync();
+        }
+        return conn?.BeginTransaction(); // Fallback síncrono
+    }
 }

@@ -19,113 +19,91 @@ namespace APPCORE.BDCore.Implementations
 		opciones de filtrado. Este método es crucial para construir consultas SELECT complejas basadas en el estado actual del objeto EntityClass, sus 
 		propiedades y filtros adicionales proporcionados. Permite una construcción dinámica de consultas que pueden adaptarse a una variedad de escenarios
 		de recuperación de datos.*/
+
+
 		public override (string queryResults, string queryCount, List<IDbDataParameter>? parameters) BuildSelectQuery(
-			EntityClass Inst, string CondSQL, int recursionDepth = 0) // Agregado recursionDepth
+			EntityClass Inst, string CondSQL, int recursionDepth = 0)
+			=> BuildSelectQueryCore(Inst, Inst.DescribeEntity(GetSqlType()), Inst.filterData, Inst.orderData, CondSQL, recursionDepth, false);
+
+		public override (string queryResults, string queryCount, List<IDbDataParameter>? parameters) BuildSelectQuery(
+			ViewClass Inst, string CondSQL, int recursionDepth = 0)
+			=> BuildSelectQueryCore(Inst, Inst.DescribeEntity(GetSqlType()), Inst.filterData, Inst.orderData, CondSQL, recursionDepth, true);
+
+		private (string queryResults, string queryCount, List<IDbDataParameter>? parameters) BuildSelectQueryCore(
+			object Inst, List<EntityProps> entityProps, List<FilterData> filterData,
+			IEnumerable<OrdeData>? orderData, string CondSQL, int recursionDepth, bool isView)
 		{
-			// Inicialización de variables para la construcción de la consulta
-			string CondicionString = " Where IsDeleted != 1 ";
+			// Las vistas no tienen IsDeleted: el filtro inicial depende de las columnas reales
+			bool hasIsDeleted = entityProps.Any(p => p.COLUMN_NAME == "IsDeleted");
+			string CondicionString = hasIsDeleted ? " Where IsDeleted != 1 " : "";
 			string Columns = "";
 
-			// Obtener el tipo y las propiedades del objeto de clase de entidad
 			Type _type = Inst.GetType();
 			PropertyInfo[] lst = _type.GetProperties();
-
-			// Describir las propiedades de la entidad
-			List<EntityProps> entityProps = Inst.DescribeEntity(GetSqlType());
-			// Generar un alias para la tabla
 			string tableAlias = AliasGenerator();
-			// Lista para almacenar parámetros IDbDataParameter
-			List<IDbDataParameter> parameters = new List<IDbDataParameter>();
+			var parameters = new List<IDbDataParameter>();
 
-			// Iterar sobre las propiedades del objeto de clase de entidad
 			foreach (PropertyInfo oProperty in lst)
 			{
 				string AtributeName = oProperty.Name;
 				var EntityProp = entityProps.Find(e => e.COLUMN_NAME.ToLower() == AtributeName.ToLower());
 
-				// Obtener atributos específicos de relación entre entidades
 				var oneToOne = (OneToOne?)Attribute.GetCustomAttribute(oProperty, typeof(OneToOne));
 				var manyToOne = (ManyToOne?)Attribute.GetCustomAttribute(oProperty, typeof(ManyToOne));
 				var oneToMany = (OneToMany?)Attribute.GetCustomAttribute(oProperty, typeof(OneToMany));
 				var jsonProp = (JsonProp?)Attribute.GetCustomAttribute(oProperty, typeof(JsonProp));
 
-				// Si la propiedad pertenece a la entidad
 				if (EntityProp != null)
-				{
 					IncludeExistingPropiertyInQuery(Inst, ref CondicionString, ref Columns, parameters, oProperty, AtributeName, EntityProp, jsonProp);
-				}
-				// Si la propiedad es una relación "ManyToOne" y se requiere la entidad completa
 				else if (manyToOne != null && recursionDepth < 3)
-				{
-					Columns = IncludeManyToOneObjectInQuery(Inst, Columns, tableAlias, oProperty, AtributeName, manyToOne, recursionDepth); // Pasar recursionDepth
-				}
-				// Si la propiedad es una relación "OneToOne" y se requiere la entidad completa
+					Columns = IncludeManyToOneObjectInQuery(Inst, Columns, tableAlias, oProperty, AtributeName, manyToOne, recursionDepth);
 				else if (oneToOne != null && recursionDepth < 3)
-				{
 					Columns = IncludeOneToOneObjectInQuery(Inst, Columns, lst, tableAlias, oProperty, AtributeName, oneToOne, recursionDepth);
-				}
-				// Si la propiedad es una relación "OneToMany" y se requiere la entidad completa
 				else if (oneToMany != null && recursionDepth < 3)
-				{
 					Columns = IncludeOneToManyObjectInQuery(Inst, Columns, tableAlias, oProperty, AtributeName, oneToMany, recursionDepth);
-				}
 			}
 
-			// Colocar filtros al query
-			CondicionString = SetFilterData(Inst, CondicionString, lst, entityProps, parameters);
+			// Reutiliza el método privado que extrajimos antes
+			CondicionString = SetFilterData(filterData, CondicionString, lst, entityProps, parameters);
 
-			// Eliminar caracteres innecesarios del final de la cadena de condiciones
 			DeleteInnecesaryCharacters(CondSQL, ref CondicionString, ref Columns);
 
-			// Obtener la propiedad de límite de filtro
-			FilterData? filterLimit = Inst.filterData?.Find(f =>
-					f.FilterType?.ToLower().Contains("limit") == true);
+			FilterData? filterLimit = filterData?.Find(f => f.FilterType?.ToLower().Contains("limit") == true);
+			FilterData? filterPaginated = filterData?.Find(f => f.FilterType?.ToLower().Contains("paginated") == true);
 
-			// Obtener la propiedad de límite de filtro
-			FilterData? filterPaginated = Inst.filterData?.Find(f =>
-					f.FilterType?.ToLower().Contains("paginated") == true);
-
-
-
-			// Construir la consulta SELECT principal
-			if (entityProps.Find(prop => prop.COLUMN_NAME == "IsDeleted") != null)
+			if (hasIsDeleted)
 			{
 				if (CondSQL.Length == 0)
 				{
 					WhereOrAnd(ref CondicionString);
 					CondicionString += " IsDeleted != 1 ";
 				}
-				else if (CondSQL.Length > 0)
+				else
 				{
 					CondSQL += " and IsDeleted != 1 ";
 				}
 			}
-			string queryString = $"SELECT {(filterLimit != null ? $" top {filterLimit?.Values?[0]}" : "")} {Columns}"
-								+ $" FROM {entityProps[0].TABLE_SCHEMA}.{Inst.GetType().Name} as {tableAlias}  {CondicionString} {CondSQL} ";
 
+			string queryString = $"SELECT {(filterLimit != null ? $" top {filterLimit.Values?[0]}" : "")} {Columns}"
+							   + $" FROM {entityProps[0].TABLE_SCHEMA}.{_type.Name} as {tableAlias}  {CondicionString} {CondSQL} ";
 
-			// Obtener la propiedad de clave principal
-			PropertyInfo? primaryKeyPropierty = Inst?.GetType()?.GetProperties()?.ToList()?.Where(p => Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).FirstOrDefault();
+			PropertyInfo? primaryKeyPropierty = lst.FirstOrDefault(p => Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null);
 
-			// Obtener las órdenes de filtro
-			queryString = SetOrderByData(Inst, primaryKeyPropierty, queryString);
+			queryString = SetOrderByData(orderData, primaryKeyPropierty, queryString);
+
 			if (filterPaginated != null)
 			{
-				int? pageNum = Convert.ToInt32(filterPaginated?.Values?[0] ?? "0");
-				int? pageSize = Convert.ToInt32(filterPaginated?.Values?[1] ?? "0");
-				queryString = queryString + " OFFSET " + (pageNum - 1) * pageSize + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
+				int pageNum = Convert.ToInt32(filterPaginated.Values?[0] ?? "0");
+				int pageSize = Convert.ToInt32(filterPaginated.Values?[1] ?? "0");
+				queryString += $" OFFSET {(pageNum - 1) * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 			}
 
+			string queryStringCount = $" SELECT count(*) FROM {entityProps[0].TABLE_SCHEMA}.{_type.Name} as {tableAlias} {CondicionString} {CondSQL};";
 
-
-			// Construir la consulta COUNT para obtener el total de registros
-			string queryStringCount = $" SELECT count(*) FROM {entityProps[0].TABLE_SCHEMA}.{Inst?.GetType().Name} as {tableAlias} {CondicionString} {CondSQL};";
-
-			// Devolver la consulta principal y la consulta COUNT
 			return (queryString, queryStringCount, parameters);
 		}
 
-		private string IncludeOneToManyObjectInQuery(EntityClass Inst,
+		private string IncludeOneToManyObjectInQuery(object Inst,
 			string Columns, string tableAlias,
 			PropertyInfo oProperty, string AtributeName,
 			OneToMany? oneToMany, int recursionDepth) // Agregado recursionDepth
@@ -144,7 +122,7 @@ namespace APPCORE.BDCore.Implementations
 			return Columns;
 		}
 
-		private string IncludeOneToOneObjectInQuery(EntityClass Inst,
+		private string IncludeOneToOneObjectInQuery(object Inst,
 			string Columns, PropertyInfo[] lst,
 			string tableAlias,
 			PropertyInfo oProperty,
@@ -174,14 +152,37 @@ namespace APPCORE.BDCore.Implementations
 			return Columns;
 		}
 
-		private string IncludeManyToOneObjectInQuery(EntityClass Inst,
+		private string IncludeManyToOneObjectInQuery(object Inst,
+			string Columns, string tableAlias,
+			PropertyInfo oProperty, string AtributeName,
+			ManyToOne? manyToOne, int recursionDepth)
+		{
+			object? related = Activator.CreateInstance(oProperty.PropertyType);
+			if (related == null)
+				return Columns;
+
+			string condition = " " + manyToOne?.KeyColumn + " = " + tableAlias + "." + manyToOne?.ForeignKeyColumn;
+
+			// El tipo real de la propiedad decide a qué sobrecarga se llama
+			(string subquery, _, _) = related switch
+			{
+				ViewClass v => BuildSelectQuery(v, condition, recursionDepth + 1),
+				EntityClass e => BuildSelectQuery(e, condition, recursionDepth + 1),
+				_ => throw new InvalidOperationException(
+						$"{oProperty.PropertyType.Name} no hereda de EntityClass ni de ViewClass.")
+			};
+
+			return Columns + AtributeName
+				 + $" = JSON_QUERY(({subquery} FOR JSON PATH,  ROOT('object')),'$.object[0]'),";
+		}
+		private string IncludeManyToOneObjectInQueryView(ViewClass Inst,
 			string Columns, string tableAlias,
 			PropertyInfo oProperty, string AtributeName,
 			ManyToOne? manyToOne, int recursionDepth) // Agregado recursionDepth
 		{
 
 			// Construir subconsulta JSON para la relación "ManyToOne"
-			var manyToOneInstance = (EntityClass?)Activator.CreateInstance(oProperty.PropertyType);
+			var manyToOneInstance = (ViewClass?)Activator.CreateInstance(oProperty.PropertyType);
 			if (manyToOneInstance != null)
 			{
 				//manyToOneInstance.SetConnection(Inst.GetConnection());
@@ -192,7 +193,7 @@ namespace APPCORE.BDCore.Implementations
 			}
 			return Columns;
 		}
-		private void IncludeExistingPropiertyInQuery(EntityClass Inst, ref string CondicionString, ref string Columns, List<IDbDataParameter> parameters, PropertyInfo oProperty, string AtributeName, EntityProps? EntityProp, JsonProp? jsonProp)
+		private void IncludeExistingPropiertyInQuery(object Inst, ref string CondicionString, ref string Columns, List<IDbDataParameter> parameters, PropertyInfo oProperty, string AtributeName, EntityProps? EntityProp, JsonProp? jsonProp)
 		{
 			if (jsonProp != null)
 			{

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 
 namespace APPCORE.BDCore.Abstracts
@@ -11,6 +12,11 @@ namespace APPCORE.BDCore.Abstracts
 	{
 		public abstract (string queryResults, string queryCount, List<IDbDataParameter>? parameters) BuildSelectQuery(
 			EntityClass Inst,
+			string CondSQL,
+			int recursionDepth = 0);
+
+		public abstract (string queryResults, string queryCount, List<IDbDataParameter>? parameters) BuildSelectQuery(
+			ViewClass Inst,
 			string CondSQL,
 			int recursionDepth = 0);
 
@@ -182,7 +188,7 @@ namespace APPCORE.BDCore.Abstracts
 			// Retorna la consulta INSERT y los parámetros SQL creados
 			return (QUERY, parameters);
 		}
-		public (string?, List<IDbDataParameter>?) BuildDeleteQuery(EntityClass Inst, bool fullDelete = false )
+		public (string?, List<IDbDataParameter>?) BuildDeleteQuery(EntityClass Inst, bool fullDelete = false)
 		{
 			string TableName = Inst.GetType().Name.ToLower();
 			string CondicionString = "";
@@ -211,7 +217,7 @@ namespace APPCORE.BDCore.Abstracts
 			}
 			else
 			{
-				strQuery = "UPDATE " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + " SET IsDeleted = 1 "  + CondicionString ;
+				strQuery = "UPDATE " + entityProps[0].TABLE_SCHEMA + "." + TableName.ToLower() + " SET IsDeleted = 1 " + CondicionString;
 			}
 			//LoggerServices.AddMessageInfo(strQuery);
 			return (strQuery, parameters);
@@ -435,20 +441,27 @@ namespace APPCORE.BDCore.Abstracts
 			return CondicionString; // Devuelve la cadena de valores
 		}
 
-		public string SetFilterData(EntityClass Inst, string CondicionString, PropertyInfo[] lst, List<EntityProps> entityProps, List<IDbDataParameter> parameters)
+		public string SetFilterData(EntityClass Inst, string CondicionString, PropertyInfo[] lst,
+			List<EntityProps> entityProps, List<IDbDataParameter> parameters)
+			=> SetFilterData(Inst?.filterData, CondicionString, lst, entityProps, parameters);
+
+		public string SetFilterData(ViewClass Inst, string CondicionString, PropertyInfo[] lst,
+			List<EntityProps> entityProps, List<IDbDataParameter> parameters)
+			=> SetFilterData(Inst?.filterData, CondicionString, lst, entityProps, parameters);
+
+		public string SetFilterData(IEnumerable<FilterData>? filterData, string CondicionString, PropertyInfo[] lst,
+			List<EntityProps> entityProps, List<IDbDataParameter> parameters)
 		{
-			// Construir condiciones de consulta basadas en el filtro de datos
-			if (Inst.filterData != null && Inst.filterData.Count != 0)
+			if (filterData == null)
+				return CondicionString;
+
+			foreach (FilterData filter in filterData)
 			{
-				foreach (FilterData filter in Inst.filterData)
+				string filterCond = SetFilterValueCondition(lst, filter, parameters, entityProps);
+				if (filterCond.Length != 0)
 				{
-					// Construir condiciones de consulta basadas en el filtro de datos
-					string filterCond = SetFilterValueCondition(lst, filter, parameters, entityProps);
-					if (filterCond.Length != 0)
-					{
-						WhereOrAnd(ref CondicionString);
-						CondicionString += filterCond;
-					}
+					WhereOrAnd(ref CondicionString);
+					CondicionString += filterCond;
 				}
 			}
 
@@ -475,23 +488,31 @@ namespace APPCORE.BDCore.Abstracts
 			Columns = Columns.TrimEnd(',');
 		}
 		public string SetOrderByData(EntityClass Inst, PropertyInfo? primaryKeyPropierty, string queryString)
+			=> SetOrderByData(Inst?.orderData, primaryKeyPropierty, queryString);
+
+		public string SetOrderByData(ViewClass Inst, PropertyInfo? primaryKeyPropierty, string queryString)
+			=> SetOrderByData(Inst?.orderData, primaryKeyPropierty, queryString);
+
+		public string SetOrderByData(IEnumerable<OrdeData>? orderData, PropertyInfo? primaryKeyPropierty, string queryString)
 		{
-			// Obtener las órdenes de filtro			
-			var filterOrders = Inst?.orderData?.Where(f => f.PropName != null &&
-					(f.OrderType?.ToLower().Contains("asc") == true || f.OrderType?.ToLower().Contains("desc") == true)).ToList();
-			// Construir la cláusula ORDER BY según sea necesario
-			if (filterOrders != null && filterOrders.Count != 0)
+			var filterOrders = orderData?
+				.Where(f => f.PropName != null &&
+							(f.OrderType?.Contains("asc", StringComparison.OrdinalIgnoreCase) == true ||
+							 f.OrderType?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true))
+				.ToList();
+
+			if (filterOrders is { Count: > 0 })
 			{
-				queryString = queryString + $" Order by {String.Join(", ", filterOrders.Select(o => $" {o.PropName} {o.OrderType} "))}";
+				return $"{queryString} ORDER BY {string.Join(", ", filterOrders.Select(o => $"{o.PropName} {o.OrderType}"))}";
 			}
-			else if (primaryKeyPropierty != null)
+
+			if (primaryKeyPropierty != null)
 			{
-				queryString = queryString + " ORDER BY " + primaryKeyPropierty.Name + " DESC";
+				return $"{queryString} ORDER BY {primaryKeyPropierty.Name} DESC";
 			}
 
 			return queryString;
 		}
-
 		internal string? BuildUpdateNullsPropertys(EntityClass entityClass, string[] properties)
 		{
 			if (entityClass == null || properties == null || properties.Length == 0)
