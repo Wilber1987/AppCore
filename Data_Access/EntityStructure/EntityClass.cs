@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Data;
-using System.Data.Common; // ⬅️ Para OpenAsync y BeginTransactionAsync
 using System.Reflection;
 using APPCORE.BDCore.Abstracts;
 
@@ -327,32 +326,7 @@ public abstract class EntityClass : TransactionalClass
 
     // ==================== 🚀 MÉTODOS ASÍNCRONOS (FLUJO 100% ASYNC) ====================
 
-    /// <summary>
-    /// Helper: Abre la conexión de forma asíncrona
-    /// </summary>
-    private static async Task OpenConnectionAsync(IDbConnection? conn)
-    {
-        if (conn is DbConnection dbConn)
-        {
-            await dbConn.OpenAsync();
-        }
-        else
-        {
-            conn?.Open(); // Fallback síncrono
-        }
-    }
-
-    /// <summary>
-    /// Helper: Inicia una transacción de forma asíncrona
-    /// </summary>
-    private static async Task<IDbTransaction?> BeginTransactionAsync(IDbConnection? conn)
-    {
-        if (conn is DbConnection dbConn)
-        {
-            return await dbConn.BeginTransactionAsync();
-        }
-        return conn?.BeginTransaction(); // Fallback síncrono
-    }
+    
 
     /// <summary>
     /// Versión asíncrona de Get<T>. Flujo 100% async sin Task.Run.

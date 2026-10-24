@@ -298,6 +298,22 @@ namespace APPCORE.BDCore.Abstracts
                 throw;
             }
         }
+        public int Count(ViewClass Inst)
+        {
+            (string queryString, string queryCount, List<IDbDataParameter>? parameters) =
+                QueryBuilder.BuildSelectQuery(Inst, "", 3);
+            try
+            {
+                DataTable? Table = GDatos?.TraerDatosSQL(queryCount, Inst.GetSqlConnection(), Inst.GetTransaction(), parameters);
+                return Convert.ToInt32(Table?.Rows[0][0]);
+            }
+            catch (Exception e)
+            {
+                GDatos?.ReStartData(e);
+                LoggerServices.AddMessageError($"ERROR: BuildTable - {Inst.GetType().Name} - {queryString}", e);
+                throw;
+            }
+        }
 
         #endregion
 
@@ -310,7 +326,46 @@ namespace APPCORE.BDCore.Abstracts
             return ListD;
         }
 
+        public List<T> TakeList<T>(ViewClass Inst, string CondSQL = "", bool isSimpleFind = false)
+        {
+            DataTable? Table = BuildTable(Inst, ref CondSQL, isSimpleFind);
+            List<T> ListD = AdapterUtil.ConvertDataTable<T>(Table, Inst);
+            return ListD;
+        }
+
         public T? TakeObject<T>(EntityClass Inst, string CondSQL = "", bool isSimpleFind = false)
+        {
+            Inst!.filterData!.Add(FilterData.Limit(1));
+            (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQuery(Inst, CondSQL, isSimpleFind ? 3 : 0);
+
+            try
+            {
+                if (!queryCount.ToUpper().Contains(" WHERE "))
+                {
+                    throw new Exception($"No es posible buscar el objeto. La entidad {Inst.GetType().Name} requiere filtros o parámetros con valores para hacer la comparación.");
+                }
+
+                DataTable? Table = GDatos?.TraerDatosSQL(queryString, Inst.GetSqlConnection(), Inst.GetTransaction(), parameters);
+
+                if (Table?.Rows.Count != 0)
+                {
+                    var CObject = AdapterUtil.ConvertRow<T>(Inst, Table?.Rows[0]);
+                    return CObject;
+                }
+                else
+                {
+                    return default;
+                }
+            }
+            catch (System.Exception e)
+            {
+                GDatos?.ReStartData(e);
+                LoggerServices.AddMessageError($"ERROR: TakeList - {Inst.GetType().Name} - {queryString}", e);
+                throw;
+            }
+        }
+
+        public T? TakeObject<T>(ViewClass Inst, string CondSQL = "", bool isSimpleFind = false)
         {
             Inst!.filterData!.Add(FilterData.Limit(1));
             (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQuery(Inst, CondSQL, isSimpleFind ? 3 : 0);
@@ -376,7 +431,33 @@ namespace APPCORE.BDCore.Abstracts
             }
         }
 
+        public DataTable? BuildTable(ViewClass Inst, ref string CondSQL, bool isSimpleFind = false)
+        {
+            (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQuery(Inst, CondSQL, isSimpleFind ? 3 : 0);
+
+            try
+            {
+                DataTable? Table = GDatos?.TraerDatosSQL(queryString, Inst.GetSqlConnection(), Inst.GetTransaction(), parameters);
+                return Table;
+            }
+            catch (Exception e)
+            {
+                GDatos?.ReStartData(e);
+                string cadenaCompleta = string.Join(Environment.NewLine, parameters.Select(p => $"{p.ParameterName} = {p.Value}"));
+                LoggerServices.AddMessageError($"ERROR: BuildTable \n\n {Inst.GetType().Name} \n\n {cadenaCompleta} \n {queryString}", e);
+                throw;
+            }
+        }
+
         internal List<EntityProps> DescribeEntity(EntityClass entityClass)
+        {
+            if (GDatos.GetSqlType == SqlEnumType.MYSQL)
+            {
+                GDatos.TestConnection();
+            }
+            return GDatos.EntityDescription?.Where(x => x.TABLE_NAME.ToLower() == entityClass.GetType().Name.ToLower()).ToList() ?? new List<EntityProps>();
+        }
+         internal List<EntityProps> DescribeEntity(ViewClass entityClass)
         {
             if (GDatos.GetSqlType == SqlEnumType.MYSQL)
             {
@@ -618,6 +699,12 @@ namespace APPCORE.BDCore.Abstracts
             List<T> ListD = AdapterUtil.ConvertDataTable<T>(Table, Inst);
             return ListD;
         }
+         public async Task<List<T>> TakeListAsync<T>(ViewClass Inst, string CondSQL = "", bool isSimpleFind = false)
+        {
+            DataTable? Table = await BuildTableAsync(Inst, CondSQL, isSimpleFind);
+            List<T> ListD = AdapterUtil.ConvertDataTable<T>(Table, Inst);
+            return ListD;
+        }
 
         /// <summary>
         /// Versión asíncrona de TakeObject
@@ -654,11 +741,62 @@ namespace APPCORE.BDCore.Abstracts
                 throw;
             }
         }
+        public async Task<T?> TakeObjectAsync<T>(ViewClass Inst, string CondSQL = "", bool isSimpleFind = false)
+        {
+            Inst!.filterData!.Add(FilterData.Limit(1));
+            (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQuery(Inst, CondSQL, isSimpleFind ? 3 : 0);
+
+            try
+            {
+                if (!queryCount.ToUpper().Contains(" WHERE "))
+                {
+                    throw new Exception($"No es posible buscar el objeto. La entidad {Inst.GetType().Name} requiere filtros o parámetros con valores para hacer la comparación.");
+                }
+
+                // 🚀 Usar método async
+                DataTable? Table = await GDatos!.TraerDatosSQLAsync(queryString, Inst.GetSqlConnection(), Inst.GetTransaction(), parameters);
+
+                if (Table?.Rows.Count != 0)
+                {
+                    var CObject = AdapterUtil.ConvertRow<T>(Inst, Table?.Rows[0]);
+                    return CObject;
+                }
+                else
+                {
+                    return default;
+                }
+            }
+            catch (System.Exception e)
+            {
+                GDatos?.ReStartData(e);
+                LoggerServices.AddMessageError($"ERROR: TakeListAsync - {Inst.GetType().Name} - {queryString}", e);
+                throw;
+            }
+        }
 
         /// <summary>
         /// Versión asíncrona de BuildTable
         /// </summary>
         public async Task<DataTable?> BuildTableAsync(EntityClass Inst, string CondSQL, bool isSimpleFind = false)
+        {
+            (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQuery(Inst, CondSQL, isSimpleFind ? 3 : 0);
+
+            try
+            {
+                // 🚀 Usar método async
+                DataTable? Table = await GDatos!.TraerDatosSQLAsync(queryString, Inst.GetSqlConnection(), Inst.GetTransaction(), parameters);
+                return Table;
+            }
+            catch (Exception e)
+            {
+                GDatos?.ReStartData(e);
+                string cadenaCompleta = string.Join(Environment.NewLine, parameters.Select(p => $"{p.ParameterName} = {p.Value}"));
+                LoggerServices.AddMessageError($"ERROR: BuildTableAsync \n\n {Inst.GetType().Name} \n\n {cadenaCompleta} \n {queryString}", e);
+                throw;
+            }
+        }
+
+         public async Task<DataTable?> BuildTableAsync(ViewClass Inst, string CondSQL, bool isSimpleFind = false)
         {
             (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQuery(Inst, CondSQL, isSimpleFind ? 3 : 0);
 

@@ -274,5 +274,10 @@ namespace APPCORE.PostgresImplementations
 		{
 			return SqlEnumType.POSTGRES_SQL;
 		}
-	}
+
+        public override (string queryResults, string queryCount, List<IDbDataParameter>? parameters) BuildSelectQuery(ViewClass Inst, string CondSQL, int recursionDepth = 0)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
