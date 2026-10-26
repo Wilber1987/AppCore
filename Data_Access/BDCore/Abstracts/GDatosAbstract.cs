@@ -80,7 +80,7 @@ namespace APPCORE
         }
 
         // ==================== MÉTODOS SÍNCRONOS (EXISTENTES - SIN CAMBIOS) ====================
-        
+
         public bool TestConnection()
         {
             try
@@ -117,11 +117,14 @@ namespace APPCORE
             var tables = EntityDescription.GroupBy(x => new { x.TABLE_SCHEMA, x.TABLE_NAME });
             foreach (var table in tables)
             {
-                bool hasIsDeleted = table.Any(c => c.COLUMN_NAME.Equals("IsDeleted", StringComparison.OrdinalIgnoreCase));
-                if (hasIsDeleted) continue;
-
                 string schema = table.Key.TABLE_SCHEMA;
                 string tableName = table.Key.TABLE_NAME;
+                bool hasIsDeleted = table.Any(c => c.COLUMN_NAME.Equals("IsDeleted", StringComparison.OrdinalIgnoreCase));
+                if (GetSqlType != SqlEnumType.SQL_SERVER)
+                {
+                    continue;
+                }
+                if (hasIsDeleted) continue;
                 string sql = GetSqlType switch
                 {
                     SqlEnumType.SQL_SERVER => $@"ALTER TABLE [{schema}].[{tableName}] ADD IsDeleted BIT NOT NULL DEFAULT(0)",
@@ -290,7 +293,7 @@ namespace APPCORE
                 // Casting a DbCommand para acceder a métodos async nativos
                 using var command = ComandoSql(strQuery, dbConnection);
                 var dbCommand = command as DbCommand;
-                
+
                 if (dbCommand == null)
                 {
                     // Fallback síncrono si el provider no soporta DbCommand
@@ -300,9 +303,9 @@ namespace APPCORE
                     return scalar == DBNull.Value ? true : Convert.ToInt32(scalar);
                 }
 
-                 dbCommand.Transaction = (DbTransaction?)dbTransaction;
+                dbCommand.Transaction = (DbTransaction?)dbTransaction;
                 SetParametersInCommand(parameters, dbCommand);
-                
+
                 if (dbCommand.Connection?.State != ConnectionState.Open)
                     await dbCommand.Connection!.OpenAsync();
 
@@ -331,7 +334,7 @@ namespace APPCORE
                         return true;
                     }
 
-                     dbCommand.Transaction = (DbTransaction?)dbTransaction;
+                    dbCommand.Transaction = (DbTransaction?)dbTransaction;
                     SetParametersInCommand(parameters, dbCommand);
 
                     if (dbCommand.Connection?.State != ConnectionState.Open)
@@ -369,7 +372,7 @@ namespace APPCORE
                     return resultTable;
                 }
 
-                 dbCommand.Transaction = (DbTransaction?)dbTransaction;
+                dbCommand.Transaction = (DbTransaction?)dbTransaction;
                 SetParametersInCommand(parameters, dbCommand);
 
                 if (dbCommand.Connection?.State != ConnectionState.Open)
