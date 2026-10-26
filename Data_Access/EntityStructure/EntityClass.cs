@@ -105,7 +105,12 @@ public abstract class EntityClass : TransactionalClass
 
             if (pkProperties.Count == values.Count)
             {
-                var method = typeof(WDataMapper).GetMethod("TakeList")?.MakeGenericMethod(entityType);
+                //var method = typeof(WDataMapper).GetMethod("TakeList")?.MakeGenericMethod(entityType);
+                Type[] paramTypes = [typeof(EntityClass), typeof(string), typeof(bool)];
+
+                var method = typeof(WDataMapper)
+                    .GetMethod("TakeObject", paramTypes)
+                    ?.MakeGenericMethod(entityType);
                 var data = method?.Invoke(MDataMapper, [this, "", true]) as IList;
                 return data?.Count > 0;
             }
@@ -326,7 +331,7 @@ public abstract class EntityClass : TransactionalClass
 
     // ==================== 🚀 MÉTODOS ASÍNCRONOS (FLUJO 100% ASYNC) ====================
 
-    
+
 
     /// <summary>
     /// Versión asíncrona de Get<T>. Flujo 100% async sin Task.Run.
@@ -338,8 +343,8 @@ public abstract class EntityClass : TransactionalClass
             await OpenConnectionAsync(conn);
             this.SetSqlConnection(conn);
             // 🚀 Llamada directa al método async del mapper
-            var Data = MDataMapper != null 
-                ? await MDataMapper.TakeListAsync<T>(this, condition) 
+            var Data = MDataMapper != null
+                ? await MDataMapper.TakeListAsync<T>(this, condition)
                 : null;
             return Data?.ToList() ?? new List<T>();
         }
@@ -364,8 +369,8 @@ public abstract class EntityClass : TransactionalClass
             await OpenConnectionAsync(conn);
             this.SetSqlConnection(conn);
             // 🚀 Llamada directa al método async del mapper
-            var Data = MDataMapper != null 
-                ? await MDataMapper.TakeListAsync<T>(this) 
+            var Data = MDataMapper != null
+                ? await MDataMapper.TakeListAsync<T>(this)
                 : null;
             return Data ?? new List<T>();
         }
@@ -389,8 +394,8 @@ public abstract class EntityClass : TransactionalClass
                 filterData.AddRange(where_condition?.ToList() ?? []);
             }
             // 🚀 Llamada directa al método async del mapper
-            var Data = MDataMapper != null 
-                ? await MDataMapper.TakeObjectAsync<T>(this) 
+            var Data = MDataMapper != null
+                ? await MDataMapper.TakeObjectAsync<T>(this)
                 : default(T);
             return Data;
         }
@@ -407,8 +412,8 @@ public abstract class EntityClass : TransactionalClass
             this.SetSqlConnection(conn);
             filterData = where_condition?.ToList();
             // 🚀 Llamada directa al método async del mapper
-            var Data = MDataMapper != null 
-                ? await MDataMapper.TakeObjectAsync<T>(this, "", true) 
+            var Data = MDataMapper != null
+                ? await MDataMapper.TakeObjectAsync<T>(this, "", true)
                 : default(T);
             return Data;
         }
@@ -424,8 +429,8 @@ public abstract class EntityClass : TransactionalClass
             await OpenConnectionAsync(conn);
             this.SetSqlConnection(conn);
             // 🚀 Llamada directa al método async del mapper
-            var Data = MDataMapper != null 
-                ? await MDataMapper.TakeListAsync<T>(this, "", true) 
+            var Data = MDataMapper != null
+                ? await MDataMapper.TakeListAsync<T>(this, "", true)
                 : null;
             return Data ?? new List<T>();
         }
@@ -445,8 +450,8 @@ public abstract class EntityClass : TransactionalClass
             try
             {
                 // 🚀 Llamada directa al método async del mapper
-                var result = MDataMapper != null 
-                    ? await MDataMapper.InsertObjectAsync(this, fullInsert) 
+                var result = MDataMapper != null
+                    ? await MDataMapper.InsertObjectAsync(this, fullInsert)
                     : null;
                 transaction?.Commit();
                 return result;
@@ -528,8 +533,8 @@ public abstract class EntityClass : TransactionalClass
             try
             {
                 // 🚀 Llamada directa al método async del mapper
-                var result = MDataMapper != null 
-                    ? await MDataMapper.DeleteAsync(this, fullDelete) 
+                var result = MDataMapper != null
+                    ? await MDataMapper.DeleteAsync(this, fullDelete)
                     : false;
                 transaction?.Commit();
                 return new ResponseService() { status = 200, message = this.GetType().Name + " Eliminado correctamente" };

@@ -27,7 +27,7 @@ namespace APPCORE.BDCore.Abstracts
             List<PropertyInfo> entityProps = entity.GetType().GetProperties().ToList();
             List<PropertyInfo> primaryKeyProperties = entityProps.Where(p => Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).ToList();
             List<PropertyInfo> manyToOneProperties = entityProps.Where(p => Attribute.GetCustomAttribute(p, typeof(ManyToOne)) != null).ToList();
-            
+
             if (fullInsert)
             {
                 SetManyToOneProperties(entity, manyToOneProperties);
@@ -39,7 +39,7 @@ namespace APPCORE.BDCore.Abstracts
             {
                 return null;
             }
-            
+
             object? idGenerated = GDatos?.ExcuteSqlQuery(strQuery, entity.GetSqlConnection(), entity.GetTransaction(), parameters);
 
             if (primaryKeyProperties.Count == 1)
@@ -51,7 +51,7 @@ namespace APPCORE.BDCore.Abstracts
                     primaryKeyProperties[0].SetValue(entity, Convert.ChangeType(idGenerated, pkType));
                 }
             }
-            
+
             if (!fullInsert)
             {
                 return entity;
@@ -198,8 +198,16 @@ namespace APPCORE.BDCore.Abstracts
                 var primaryKeyValue = primaryKeyProperty.GetValue(entity);
                 primaryKeyProperty.SetValue(newEntity, primaryKeyValue);
             }
-            
-            var takeObjectMethod = typeof(WDataMapper).GetMethod("TakeObject");
+
+            //var takeObjectMethod = typeof(WDataMapper).GetMethod("TakeObject")?.MakeGenericMethod(entityType);
+            Type[] paramTypes = entity is EntityClass
+                ? new[] { typeof(EntityClass), typeof(string), typeof(bool) }
+                : new[] { typeof(ViewClass), typeof(string), typeof(bool) };
+
+            var takeObjectMethod = typeof(WDataMapper)
+                .GetMethod("TakeObject", paramTypes);
+
+
             var genericMethod = takeObjectMethod?.MakeGenericMethod(entityType);
             var currentEntityInDatabase = genericMethod?.Invoke(this, [newEntity, "", false]);
 
@@ -457,7 +465,7 @@ namespace APPCORE.BDCore.Abstracts
             }
             return GDatos.EntityDescription?.Where(x => x.TABLE_NAME.ToLower() == entityClass.GetType().Name.ToLower()).ToList() ?? new List<EntityProps>();
         }
-         internal List<EntityProps> DescribeEntity(ViewClass entityClass)
+        internal List<EntityProps> DescribeEntity(ViewClass entityClass)
         {
             if (GDatos.GetSqlType == SqlEnumType.MYSQL)
             {
@@ -488,7 +496,7 @@ namespace APPCORE.BDCore.Abstracts
             List<PropertyInfo> entityProps = entity.GetType().GetProperties().ToList();
             List<PropertyInfo> primaryKeyProperties = entityProps.Where(p => Attribute.GetCustomAttribute(p, typeof(PrimaryKey)) != null).ToList();
             List<PropertyInfo> manyToOneProperties = entityProps.Where(p => Attribute.GetCustomAttribute(p, typeof(ManyToOne)) != null).ToList();
-            
+
             if (fullInsert)
             {
                 SetManyToOneProperties(entity, manyToOneProperties);
@@ -500,7 +508,7 @@ namespace APPCORE.BDCore.Abstracts
             {
                 return null;
             }
-            
+
             // 🚀 Usar método async
             object? idGenerated = await GDatos!.ExcuteSqlQueryAsync(strQuery, entity.GetSqlConnection(), entity.GetTransaction(), parameters);
 
@@ -513,7 +521,7 @@ namespace APPCORE.BDCore.Abstracts
                     primaryKeyProperties[0].SetValue(entity, Convert.ChangeType(idGenerated, pkType));
                 }
             }
-            
+
             if (!fullInsert)
             {
                 return entity;
@@ -623,8 +631,16 @@ namespace APPCORE.BDCore.Abstracts
                 var primaryKeyValue = primaryKeyProperty.GetValue(entity);
                 primaryKeyProperty.SetValue(newEntity, primaryKeyValue);
             }
+
+            //var takeObjectMethod = typeof(WDataMapper).GetMethod("TakeObject")?.MakeGenericMethod(entityType);
             
-            var takeObjectMethod = typeof(WDataMapper).GetMethod("TakeObject");
+            Type[] paramTypes = entity is EntityClass
+                ? new[] { typeof(EntityClass), typeof(string), typeof(bool) }
+                : new[] { typeof(ViewClass), typeof(string), typeof(bool) };
+
+            var takeObjectMethod = typeof(WDataMapper)
+                .GetMethod("TakeObject", paramTypes);
+            
             var genericMethod = takeObjectMethod?.MakeGenericMethod(entityType);
             var currentEntityInDatabase = genericMethod?.Invoke(this, [newEntity, "", false]);
 
@@ -699,7 +715,7 @@ namespace APPCORE.BDCore.Abstracts
             List<T> ListD = AdapterUtil.ConvertDataTable<T>(Table, Inst);
             return ListD;
         }
-         public async Task<List<T>> TakeListAsync<T>(ViewClass Inst, string CondSQL = "", bool isSimpleFind = false)
+        public async Task<List<T>> TakeListAsync<T>(ViewClass Inst, string CondSQL = "", bool isSimpleFind = false)
         {
             DataTable? Table = await BuildTableAsync(Inst, CondSQL, isSimpleFind);
             List<T> ListD = AdapterUtil.ConvertDataTable<T>(Table, Inst);
@@ -796,7 +812,7 @@ namespace APPCORE.BDCore.Abstracts
             }
         }
 
-         public async Task<DataTable?> BuildTableAsync(ViewClass Inst, string CondSQL, bool isSimpleFind = false)
+        public async Task<DataTable?> BuildTableAsync(ViewClass Inst, string CondSQL, bool isSimpleFind = false)
         {
             (string queryString, string queryCount, List<IDbDataParameter>? parameters) = QueryBuilder.BuildSelectQuery(Inst, CondSQL, isSimpleFind ? 3 : 0);
 

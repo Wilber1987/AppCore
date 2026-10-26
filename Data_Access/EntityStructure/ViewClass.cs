@@ -105,8 +105,14 @@ public abstract class ViewClass : TransactionalClass
 
             if (pkProperties.Count == values.Count)
             {
-                var method = typeof(WDataMapper).GetMethod("TakeList")?.MakeGenericMethod(entityType);
-                var data = method?.Invoke(MDataMapper, [this, "", true]) as IList;
+                //var method = typeof(WDataMapper).GetMethod("TakeList")?.MakeGenericMethod(entityType);
+               Type[] paramTypes = [typeof(ViewClass), typeof(string), typeof(bool)];
+
+                var method = typeof(WDataMapper)
+                    .GetMethod("TakeObject", paramTypes)
+                    ?.MakeGenericMethod(entityType);
+               
+               var data = method?.Invoke(MDataMapper, [this, "", true]) as IList;
                 return data?.Count > 0;
             }
             return false;
